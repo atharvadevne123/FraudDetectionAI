@@ -1,0 +1,17 @@
+{
+  "transaction_id": "TXN-CRIT-01",
+  "fraud_score": 0.252594,
+  "anomaly_score": 0.683389,
+  "fraud_label": 0,
+  "risk_tier": "CLEAN",
+  "explanation": "",
+  "latency_ms": 219.77,
+  "_request_summary": {
+    "amount": 4999.99,
+    "merchant_category": "crypto",
+    "payment_method": "wire",
+    "account_age_days": 12,
+    "credit_utilization": 0.92,
+    "prior_fraud_count": 1
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "transaction_id": "TXN-HIGH-01",
+  "fraud_score": 0.206473,
+  "anomaly_score": 0.684723,
+  "fraud_label": 0,
+  "risk_tier": "CLEAN",
+  "explanation": "",
+  "latency_ms": 108.17,
+  "_request_summary": {
+    "amount": 2800.0,
+    "merchant_category": "gambling",
+    "payment_method": "credit",
+    "account_age_days": 65,
+    "credit_utilization": 0.78,
+    "prior_fraud_count": 1
+  }
+}

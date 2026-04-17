@@ -1,0 +1,17 @@
+{
+  "transaction_id": "TXN-MED-01",
+  "fraud_score": 0.195867,
+  "anomaly_score": 0.514857,
+  "fraud_label": 0,
+  "risk_tier": "CLEAN",
+  "explanation": "",
+  "latency_ms": 103.09,
+  "_request_summary": {
+    "amount": 890.0,
+    "merchant_category": "retail",
+    "payment_method": "credit",
+    "account_age_days": 240,
+    "credit_utilization": 0.62,
+    "prior_fraud_count": 0
+  }
+}

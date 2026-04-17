@@ -1,0 +1,17 @@
+{
+  "transaction_id": "TXN-LOW-01",
+  "fraud_score": 0.005746,
+  "anomaly_score": 0.201629,
+  "fraud_label": 0,
+  "risk_tier": "CLEAN",
+  "explanation": "",
+  "latency_ms": 104.75,
+  "_request_summary": {
+    "amount": 145.5,
+    "merchant_category": "grocery",
+    "payment_method": "debit",
+    "account_age_days": 820,
+    "credit_utilization": 0.38,
+    "prior_fraud_count": 0
+  }
+}

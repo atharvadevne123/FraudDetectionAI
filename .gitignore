@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.joblib
+*.log
+data/raw/
+data/processed/
+data/streams/
+monitoring/reports/
+models/anomaly/artifacts/
+models/ensemble/artifacts/
+models/rag/artifacts/
+.DS_Store
+mlruns/
+*.tmp

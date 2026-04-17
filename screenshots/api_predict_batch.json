@@ -1,0 +1,50 @@
+{
+  "results": [
+    {
+      "transaction_id": "TXN-CRIT-01",
+      "fraud_score": 0.252594,
+      "anomaly_score": 0.683389,
+      "fraud_label": 0,
+      "risk_tier": "CLEAN",
+      "explanation": "",
+      "latency_ms": 102.42
+    },
+    {
+      "transaction_id": "TXN-HIGH-01",
+      "fraud_score": 0.206473,
+      "anomaly_score": 0.684723,
+      "fraud_label": 0,
+      "risk_tier": "CLEAN",
+      "explanation": "",
+      "latency_ms": 102.36
+    },
+    {
+      "transaction_id": "TXN-MED-01",
+      "fraud_score": 0.195867,
+      "anomaly_score": 0.514857,
+      "fraud_label": 0,
+      "risk_tier": "CLEAN",
+      "explanation": "",
+      "latency_ms": 106.5
+    },
+    {
+      "transaction_id": "TXN-LOW-01",
+      "fraud_score": 0.005746,
+      "anomaly_score": 0.201629,
+      "fraud_label": 0,
+      "risk_tier": "CLEAN",
+      "explanation": "",
+      "latency_ms": 102.89
+    },
+    {
+      "transaction_id": "TXN-CLEAN-01",
+      "fraud_score": 0.000128,
+      "anomaly_score": 0.244228,
+      "fraud_label": 0,
+      "risk_tier": "CLEAN",
+      "explanation": "",
+      "latency_ms": 103.45
+    }
+  ],
+  "count": 5
+}
