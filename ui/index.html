@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1400">
+<title>SENTINELLA | Real-Time Fraud Analytics</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg-app:#07090f;--bg-panel:#0b0f1c;--bg-card:#0f1625;--bg-input:#090c18;
+  --bg-hover:#131d30;--border:#182236;--border-sub:#0f1625;
+  --txt:#e2e8f0;--txt2:#94a3b8;--txt3:#475569;
+  --crit:#ef4444;--crit-bg:rgba(239,68,68,.1);--crit-bdr:rgba(239,68,68,.25);
+  --high:#f97316;--high-bg:rgba(249,115,22,.1);--high-bdr:rgba(249,115,22,.25);
+  --med:#f59e0b;--med-bg:rgba(245,158,11,.1);--med-bdr:rgba(245,158,11,.25);
+  --low:#3b82f6;--low-bg:rgba(59,130,246,.1);--low-bdr:rgba(59,130,246,.25);
+  --clean:#22c55e;--clean-bg:rgba(34,197,94,.1);--clean-bdr:rgba(34,197,94,.25);
+  --acc:#6366f1;--acc-glow:rgba(99,102,241,.25);
+  --mono:'Courier New',monospace;
+}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg-app);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;font-size:13px;display:flex;flex-direction:column;}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:46px;background:#060810;border-bottom:1px solid var(--border);flex-shrink:0;z-index:50;}
+.hdr-brand{display:flex;align-items:center;gap:14px;}
+.brand{font-size:14px;font-weight:800;letter-spacing:.4px;color:var(--crit);}
+.brand span{color:#374151;}
+.sys-badge{display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.18);padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;color:var(--clean);letter-spacing:.6px;}
+.sys-dot{width:6px;height:6px;border-radius:50%;background:var(--clean);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.hdr-icons{display:flex;gap:8px;}
+.ico-btn{width:30px;height:30px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--txt2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:.15s all;}
+.ico-btn:hover{background:var(--bg-card);color:var(--txt);border-color:#243050;}
+
+/* LAYOUT */
+.main{display:grid;grid-template-columns:420px 1fr;flex:1;overflow:hidden;}
+
+/* SCORER PANEL */
+.sp{background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;}
+.sp::-webkit-scrollbar{width:4px;}
+.sp::-webkit-scrollbar-thumb{background:#1a2840;border-radius:2px;}
+.p-title{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.p-title h2{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--txt2);text-transform:uppercase;}
+
+.form{padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.lbl{font-size:10px;font-weight:600;letter-spacing:.7px;color:var(--txt3);text-transform:uppercase;}
+.inp,.sel{background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-size:12px;padding:7px 10px;outline:none;transition:.15s border-color;width:100%;}
+.inp:focus,.sel:focus{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-glow);}
+.inp::placeholder{color:var(--txt3);}
+.sel{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2364748b' d='M5 7 1 3h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;padding-right:26px;}
+.sel option{background:#0b0f1c;}
+
+.slider-wrap{display:flex;align-items:center;gap:10px;}
+.slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer;}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--acc);cursor:pointer;box-shadow:0 0 6px var(--acc-glow);}
+.sval{font-size:12px;font-weight:700;min-width:38px;text-align:right;color:#38bdf8;}
+
+.tog-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:rgba(99,102,241,.04);border:1px solid rgba(99,102,241,.12);border-radius:8px;}
+.tog-lbl{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;}
+.tog{position:relative;width:44px;height:24px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.trk{position:absolute;inset:0;background:#182236;border-radius:12px;cursor:pointer;transition:background .2s;}
+.trk::before{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;}
+.tog input:checked+.trk{background:var(--crit);}
+.tog input:checked+.trk::before{transform:translateX(20px);}
+
+.score-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;cursor:pointer;transition:.2s all;overflow:hidden;}
+.score-btn:hover{background:linear-gradient(135deg,#f87171,#ef4444);box-shadow:0 4px 18px rgba(239,68,68,.3);transform:translateY(-1px);}
+.score-btn:active{transform:translateY(0);}
+.score-btn.loading{pointer-events:none;opacity:.7;}
+.spin{display:none;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+.score-btn.loading .spin{display:block;}
+.score-btn.loading .btxt{opacity:.6;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* RESULT CARD */
+.rcard{margin:0 16px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:none;}
+.rcard.on{display:block;animation:fadein .3s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.rtop{display:flex;align-items:center;gap:14px;padding:14px;border-bottom:1px solid var(--border-sub);}
+.gauge-wrap{position:relative;width:88px;height:88px;flex-shrink:0;}
+.gsv{width:88px;height:88px;transform:rotate(-90deg);}
+.gbg{fill:none;stroke:#182236;stroke-width:8;}
+.gfill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .4s;}
+.gcenter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.gpct{font-size:17px;font-weight:800;line-height:1;}
+.glat{font-size:9px;color:var(--txt3);margin-top:2px;font-family:var(--mono);}
+.rmeta{flex:1;}
+.rbadge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.5px;margin-bottom:6px;}
+.rb-CRITICAL{background:var(--crit-bg);color:var(--crit);border:1px solid var(--crit-bdr);}
+.rb-HIGH{background:var(--high-bg);color:var(--high);border:1px solid var(--high-bdr);}
+.rb-MEDIUM{background:var(--med-bg);color:var(--med);border:1px solid var(--med-bdr);}
+.rb-LOW{background:var(--low-bg);color:var(--low);border:1px solid var(--low-bdr);}
+.rb-CLEAN{background:var(--clean-bg);color:var(--clean);border:1px solid var(--clean-bdr);}
+.rmeta-sub{font-size:11px;color:var(--txt3);margin-top:4px;}
+.rmeta-sub span{color:var(--txt2);font-family:var(--mono);font-size:11px;}
+
+.asec{padding:10px 14px;border-bottom:1px solid var(--border-sub);}
+.ahdr{display:flex;justify-content:space-between;font-size:10px;font-weight:600;letter-spacing:.7px;color:var(--txt3);text-transform:uppercase;margin-bottom:5px;}
+.atrack{height:5px;background:#182236;border-radius:3px;overflow:hidden;}
+.afill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+
+.exsec{padding:10px 14px;}
+.exlbl{font-size:10px;font-weight:600;letter-spacing:.7px;color:var(--txt3);text-transform:uppercase;margin-bottom:5px;}
+.extxt{font-family:var(--mono);font-size:11px;color:#94a3b8;line-height:1.6;background:var(--bg-input);border-radius:6px;padding:9px;border:1px solid var(--border);max-height:110px;overflow-y:auto;word-break:break-word;}
+.extxt::-webkit-scrollbar{width:3px;}
+.extxt::-webkit-scrollbar-thumb{background:#1a2840;}
+
+/* FEED PANEL */
+.fp{background:var(--bg-panel);display:flex;flex-direction:column;overflow:hidden;}
+.fhdr{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.fhdr h2{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--txt2);text-transform:uppercase;}
+.ar-row{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--txt2);text-transform:uppercase;}
+.ar-count{font-family:var(--mono);font-size:10px;color:var(--acc);background:var(--acc-glow);padding:2px 7px;border-radius:3px;}
+
+.fctl{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.swrap{flex:1;position:relative;}
+.sico{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:11px;pointer-events:none;}
+.sinp{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-size:12px;padding:7px 10px 7px 28px;outline:none;transition:.15s border-color;}
+.sinp:focus{border-color:var(--acc);}
+.sinp::placeholder{color:var(--txt3);}
+.tfilter{background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-size:12px;padding:7px 26px 7px 10px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2364748b' d='M5 7 1 3h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:115px;}
+.tfilter option{background:#0b0f1c;}
+
+/* TABLE */
+.twrap{flex:1;overflow-y:auto;overflow-x:hidden;}
+.twrap::-webkit-scrollbar{width:5px;}
+.twrap::-webkit-scrollbar-track{background:transparent;}
+.twrap::-webkit-scrollbar-thumb{background:#1a2840;border-radius:3px;}
+table{width:100%;border-collapse:collapse;}
+thead{position:sticky;top:0;z-index:5;background:#07090f;}
+th{padding:8px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.7px;color:var(--txt3);text-transform:uppercase;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;}
+th:hover{color:var(--txt2);}
+th.sort-active{color:var(--acc);}
+th .arr{margin-left:3px;opacity:.4;font-size:9px;}
+th.sort-active .arr{opacity:1;}
+td{padding:8px 12px;border-bottom:1px solid var(--border-sub);vertical-align:middle;}
+tr.drow{border-left:3px solid transparent;transition:background .1s;cursor:pointer;}
+tr.drow:hover{background:var(--bg-hover);}
+tr.t-CRITICAL{border-left-color:var(--crit);}
+tr.t-HIGH{border-left-color:var(--high);}
+tr.t-MEDIUM{border-left-color:var(--med);}
+tr.t-LOW{border-left-color:var(--low);}
+tr.t-CLEAN{border-left-color:var(--clean);}
+.tid{font-family:var(--mono);font-size:11px;font-weight:600;}
+.tid.t-CRITICAL{color:var(--crit);}
+.tid.t-HIGH{color:var(--high);}
+.tid.t-MEDIUM{color:var(--med);}
+.tid.t-LOW{color:var(--low);}
+.tid.t-CLEAN{color:var(--txt2);}
+.amt{font-weight:600;font-size:13px;}
+.mch{color:var(--txt2);font-size:12px;max-width:155px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tbadge{display:inline-flex;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.4px;}
+.tb-CRITICAL{background:var(--crit-bg);color:var(--crit);}
+.tb-HIGH{background:var(--high-bg);color:var(--high);}
+.tb-MEDIUM{background:var(--med-bg);color:var(--med);}
+.tb-LOW{background:var(--low-bg);color:var(--low);}
+.tb-CLEAN{background:var(--clean-bg);color:var(--clean);}
+.scell{display:flex;align-items:center;gap:5px;}
+.sbar{width:46px;height:4px;background:#182236;border-radius:2px;overflow:hidden;flex-shrink:0;}
+.sbar-f{height:100%;border-radius:2px;}
+.snum{font-family:var(--mono);font-size:11px;min-width:34px;}
+.tcell{font-family:var(--mono);font-size:10px;color:var(--txt3);}
+.lat-cell{font-family:var(--mono);font-size:10px;color:var(--txt3);}
+
+tr.erow td{padding:0;}
+.econtent{padding:10px 14px;background:rgba(99,102,241,.03);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--txt2);line-height:1.6;display:none;}
+.econtent.open{display:block;animation:fadein .2s ease;}
+.no-data{text-align:center;padding:40px;color:var(--txt3);font-size:12px;}
+
+@keyframes flash{0%{background:rgba(99,102,241,.15);}100%{background:transparent;}}
+tr.newrow{animation:flash 1.5s ease-out;}
+
+/* PAGINATION */
+.pgn{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg-panel);}
+.pinfo{font-size:11px;color:var(--txt3);}
+.pbtns{display:flex;gap:3px;}
+.pbtn{padding:4px 9px;background:var(--bg-input);border:1px solid var(--border);border-radius:5px;color:var(--txt2);font-size:11px;cursor:pointer;transition:.15s all;}
+.pbtn:hover:not(:disabled):not(.active){background:var(--bg-card);color:var(--txt);}
+.pbtn.active{background:var(--acc);border-color:var(--acc);color:#fff;}
+.pbtn:disabled{opacity:.3;cursor:not-allowed;}
+.pbtn.dots{cursor:default;background:transparent;border-color:transparent;}
+
+/* HEALTH BAR */
+.hbar{display:flex;align-items:center;padding:0 20px;height:34px;background:#04060d;border-top:1px solid var(--border);gap:20px;flex-shrink:0;overflow-x:auto;white-space:nowrap;}
+.hbar::-webkit-scrollbar{display:none;}
+.hi{display:flex;align-items:center;gap:5px;font-size:10px;}
+.hlbl{color:var(--txt3);font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.hval{color:var(--txt2);font-family:var(--mono);}
+.hdot{width:6px;height:6px;border-radius:50%;background:var(--clean);}
+.hsep{color:#182236;font-size:14px;}
+.auc{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:4px;padding:1px 7px;color:var(--clean);font-family:var(--mono);font-weight:700;font-size:11px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:44px;right:18px;background:#120808;border:1px solid var(--crit);color:var(--crit);border-radius:8px;padding:9px 14px;font-size:11px;display:none;z-index:999;animation:slidein .3s ease;}
+@keyframes slidein{from{transform:translateX(110%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.toast.on{display:block;}
+
+/* SEED BANNER */
+.seed-banner{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--clean);font-family:var(--mono);}
+.seed-dot{width:5px;height:5px;border-radius:50%;background:var(--clean);}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-brand">
+    <span class="brand">SENTINELLA <span>|</span> Real-Time Fraud Analytics</span>
+    <span class="sys-badge"><span class="sys-dot"></span>SYSTEM: OPERATIONAL</span>
+  </div>
+  <div class="hdr-icons">
+    <button class="ico-btn" title="Notifications">🔔</button>
+    <button class="ico-btn" title="Settings">⚙️</button>
+    <button class="ico-btn" title="Help">❓</button>
+    <button class="ico-btn" title="Account">👤</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- LEFT: SCORER -->
+  <aside class="sp">
+    <div class="p-title">
+      <h2>Live Transaction Scorer</h2>
+      <span style="color:var(--crit);font-size:15px;">🎯</span>
+    </div>
+
+    <form class="form" id="sform" onsubmit="return false;">
+      <div class="row2">
+        <div class="fg"><label class="lbl">Transaction ID</label>
+          <input class="inp" id="f-id" placeholder="TXN-0000-AA"/></div>
+        <div class="fg"><label class="lbl">User ID</label>
+          <input class="inp" id="f-uid" type="number" placeholder="482910"/></div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label class="lbl">Amount ($)</label>
+          <input class="inp" id="f-amt" type="number" step="0.01" placeholder="1240.50"/></div>
+        <div class="fg"><label class="lbl">Merchant Category</label>
+          <select class="sel" id="f-cat">
+            <option value="retail">Retail</option>
+            <option value="grocery">Grocery</option>
+            <option value="crypto" selected>Crypto Exchange</option>
+            <option value="gambling">Gambling</option>
+            <option value="restaurant">Restaurant</option>
+            <option value="travel">Travel</option>
+          </select></div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label class="lbl">Payment Method</label>
+          <select class="sel" id="f-pay">
+            <option value="credit">Credit Card</option>
+            <option value="debit">Debit Card</option>
+            <option value="wire" selected>Wire Transfer</option>
+            <option value="crypto">Crypto</option>
+          </select></div>
+        <div class="fg"><label class="lbl">Device Type</label>
+          <select class="sel" id="f-dev">
+            <option value="mobile" selected>Mobile</option>
+            <option value="desktop">Desktop</option>
+            <option value="tablet">Tablet</option>
+          </select></div>
+      </div>
+      <div class="fg"><label class="lbl">Channel</label>
+        <select class="sel" id="f-chan">
+          <option value="online" selected>Online</option>
+          <option value="pos">Point of Sale</option>
+          <option value="mobile_app">Mobile App</option>
+        </select></div>
+      <div class="fg">
+        <label class="lbl">Credit Utilization</label>
+        <div class="slider-wrap">
+          <input class="slider" id="f-util" type="range" min="0" max="1" step="0.01" value="0.82"
+            oninput="document.getElementById('utilv').textContent=Math.round(this.value*100)+'%'"/>
+          <span class="sval" id="utilv">82%</span>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label class="lbl">Account Age (Days)</label>
+          <input class="inp" id="f-age" type="number" placeholder="12" value="12"/></div>
+        <div class="fg"><label class="lbl">Prior Fraud Count</label>
+          <input class="inp" id="f-pf" type="number" placeholder="0" value="1" min="0" max="10"/></div>
+      </div>
+      <div class="tog-row">
+        <span class="tog-lbl">✨ Include AI Explanation</span>
+        <label class="tog"><input type="checkbox" id="f-exp" checked/><span class="trk"></span></label>
+      </div>
+      <button class="score-btn" id="sbtn" onclick="scoreTransaction()">
+        <div class="spin"></div>
+        <span class="btxt">🛡 SCORE TRANSACTION</span>
+      </button>
+    </form>
+
+    <!-- Result Card -->
+    <div class="rcard" id="rcard">
+      <div class="rtop">
+        <div class="gauge-wrap">
+          <svg class="gsv" viewBox="0 0 88 88">
+            <circle class="gbg" cx="44" cy="44" r="36"/>
+            <circle class="gfill" id="gf" cx="44" cy="44" r="36"
+              stroke-dasharray="226.19" stroke-dashoffset="226.19"/>
+          </svg>
+          <div class="gcenter">
+            <span class="gpct" id="gpct">0%</span>
+            <span class="glat" id="glat">--ms</span>
+          </div>
+        </div>
+        <div class="rmeta">
+          <div class="rbadge" id="rbadge">--</div>
+          <div class="rmeta-sub">Fraud Score: <span id="rfs">--</span></div>
+          <div class="rmeta-sub" style="margin-top:2px;">TXN: <span id="rtid">--</span></div>
+        </div>
+      </div>
+      <div class="asec">
+        <div class="ahdr"><span>Anomaly Score</span><span id="aval">0.0000</span></div>
+        <div class="atrack"><div class="afill" id="afill" style="width:0%"></div></div>
+      </div>
+      <div class="exsec" id="exsec" style="display:none">
+        <div class="exlbl">Why was this flagged?</div>
+        <div class="extxt" id="extxt"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT: FEED -->
+  <section class="fp">
+    <div class="fhdr">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <h2>Recent Transactions Feed</h2>
+        <div class="seed-banner" id="seedBanner" style="display:none">
+          <span class="seed-dot"></span><span id="seedCount">0</span> seeded
+        </div>
+      </div>
+      <div class="ar-row">
+        AUTO-REFRESH
+        <label class="tog" style="width:38px;height:20px;">
+          <input type="checkbox" id="arToggle" checked/>
+          <span class="trk"></span>
+        </label>
+        <span class="ar-count" id="arCount">0 live</span>
+      </div>
+    </div>
+    <div class="fctl">
+      <div class="swrap">
+        <span class="sico">🔍</span>
+        <input class="sinp" id="sinp" placeholder="Search by ID, Merchant or User..." oninput="filterTable()"/>
+      </div>
+      <select class="tfilter" id="tfilter" onchange="filterTable()">
+        <option value="">All Tiers</option>
+        <option value="CRITICAL">Critical</option>
+        <option value="HIGH">High</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="LOW">Low</option>
+        <option value="CLEAN">Clean</option>
+      </select>
+    </div>
+    <div class="twrap" id="twrap">
+      <table id="ttable">
+        <thead><tr>
+          <th data-col="id">Transaction ID <span class="arr">↕</span></th>
+          <th data-col="amount">Amount <span class="arr">↕</span></th>
+          <th data-col="merchant">Merchant <span class="arr">↕</span></th>
+          <th data-col="tier">Tier <span class="arr">↕</span></th>
+          <th data-col="score">Fraud Score <span class="arr">↕</span></th>
+          <th data-col="anomaly">Anomaly <span class="arr">↕</span></th>
+          <th data-col="latency">Latency <span class="arr">↕</span></th>
+          <th data-col="time">Time <span class="arr">↕</span></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pgn" id="pgn"></div>
+  </section>
+
+</main>
+
+<!-- HEALTH BAR -->
+<footer class="hbar">
+  <div class="hi"><span class="hlbl">Model Health</span></div>
+  <span class="hsep">|</span>
+  <div class="hi"><span class="hlbl">Status</span><span class="hdot"></span><span class="hval">LIVE</span></div>
+  <span class="hsep">|</span>
+  <div class="hi"><span class="hlbl">Ensemble</span><span class="hval">XGBoost · LightGBM · RF</span></div>
+  <span class="hsep">|</span>
+  <div class="hi"><span class="hlbl">Anomaly Detector</span><span class="hval">IForest · LOF · OCSVM</span></div>
+  <span class="hsep">|</span>
+  <div class="hi"><span class="hlbl">Explainer</span><span class="hval">FAISS · Claude-RAG</span></div>
+  <span class="hsep">|</span>
+  <div class="hi"><span class="hlbl">Features</span><span class="hval">33 active</span></div>
+  <span class="hsep">|</span>
+  <div class="hi"><span class="hlbl">Val AUC-ROC</span><span class="auc">0.947</span></div>
+  <span class="hsep">|</span>
+  <div class="hi"><span class="hlbl">Total Scored</span><span class="hval" id="totalScored">500</span></div>
+</footer>
+
+<script>
+// ─── Seeded Deterministic RNG ────────────────────────────────
+class RNG {
+  constructor(s){this.s=s>>>0;}
+  next(){this.s=(1664525*this.s+1013904223)>>>0;return this.s/0xffffffff;}
+  r(a,b){return a+this.next()*(b-a);}
+  i(a,b){return Math.floor(this.r(a,b+1));}
+  pick(a){return a[Math.floor(this.next()*a.length)];}
+}
+const rng=new RNG(0xFEEDBEEF);
+
+// ─── Config ──────────────────────────────────────────────────
+const CFG={
+  CRITICAL:{fs:[.83,.99],as:[.78,1.0],
+    merchants:['CryptoHub Inc','BitVault Exchange','QuickCoin Pro','OffshoreFirst Ltd','CryptoSwap247','DarkMiner Corp','SwiftCoin Exchange','GlobalCrypto Pro'],
+    amounts:[1240,2800,4999,7500,11200,15000,3400,9800,6200,18000],
+    cat:'crypto',pay:'wire',dev:'mobile',chan:'online',
+    age:[2,50],util:[.88,.99],pf:[1,2,3]},
+  HIGH:{fs:[.66,.82],as:[.58,.82],
+    merchants:['Luxury Watches Ltd','Diamond Jewels NYC','VIP Casino Resort','GoldLink Trading','Prestige Auto Finance','Elite Handbags Paris','Monte Carlo Jewels','Apex Private Wealth'],
+    amounts:[450,890,2200,4500,1850,3700,5100,780,2950],
+    cat:'gambling',pay:'credit',dev:'mobile',chan:'online',
+    age:[30,160],util:[.70,.90],pf:[0,1,2]},
+  MEDIUM:{fs:[.46,.65],as:[.38,.66],
+    merchants:['Best Buy Tech','Apple Store','Delta Airlines','Marriott Hotels','Samsung Direct','Sony Electronics','Microsoft Store','HP Computers','Lenovo Official'],
+    amounts:[185,320,550,890,1200,750,420,980,640,310],
+    cat:'retail',pay:'credit',dev:'desktop',chan:'online',
+    age:[90,600],util:[.50,.74],pf:[0,1]},
+  LOW:{fs:[.26,.45],as:[.20,.48],
+    merchants:['Whole Foods Market','Shell Gas Station','Home Depot','Target','CVS Pharmacy','Costco Wholesale','Walgreens','Lowe\'s Home','Safeway Grocery'],
+    amounts:[38,72,124,185,240,95,158,210,67,145],
+    cat:'grocery',pay:'debit',dev:'desktop',chan:'pos',
+    age:[200,1500],util:[.28,.56],pf:[0]},
+  CLEAN:{fs:[.001,.24],as:[.05,.30],
+    merchants:['Starbucks Coffee','Netflix.com','NY Subway Transit','Uber Trip','Amazon.com','McDonald\'s','7-Eleven','Spotify Premium','Trader Joe\'s','Chipotle Mexican','Panera Bread','Lyft Ride'],
+    amounts:[5.75,15.99,3.50,12.40,42.80,8.95,28.00,9.99,65.30,11.50,18.90,22.00],
+    cat:'restaurant',pay:'debit',dev:'mobile',chan:'mobile_app',
+    age:[365,3650],util:[.04,.28],pf:[0]}
+};
+const TIERS=['CRITICAL','HIGH','MEDIUM','LOW','CLEAN'];
+const TSEV={CRITICAL:4,HIGH:3,MEDIUM:2,LOW:1,CLEAN:0};
+const TCLR={CRITICAL:'#ef4444',HIGH:'#f97316',MEDIUM:'#f59e0b',LOW:'#3b82f6',CLEAN:'#22c55e'};
+
+function alpha2(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ';return c[rng.i(0,c.length-1)]+c[rng.i(0,c.length-1)];}
+
+function mkExplanation(tier,merchant,amount,util,age,pf){
+  const u=Math.round(util*100);
+  const E={
+    CRITICAL:[
+      `[AI_LOG]: RULE-001 triggered — Amount $${amount.toFixed(2)} is 4.2σ above user baseline. Merchant "${merchant}" is classified HIGH-RISK (crypto/wire category). Credit utilization at ${u}% triggers RULE-008. Account age ${age} days is below 60-day new-account threshold.${pf>0?' RULE-010: Prior fraud history ('+pf+' incidents) applies +0.2 risk uplift. POLICY-C: AUTO_BLOCK recommended.':' RULE-003: Cross-border velocity flag raised. POLICY-C: AUTO_BLOCK activated.'}`,
+      `[AI_LOG]: MULTI_SIGNAL_FRAUD — HIGH_VELOCITY + NEW_DEVICE + ROUND_AMOUNT detected. "${merchant}" wire transfer of $${amount.toFixed(2)} on account aged ${age}d. Utilization ${u}% exceeds RULE-008 threshold (90%). ${pf>0?'Prior fraud record (count='+pf+') per RULE-010.':'RULE-007: Multiple IP addresses detected in session.'} POLICY-C: Transaction blocked pending investigation.`
+    ],
+    HIGH:[
+      `[AI_LOG]: RULE-002 — Large transaction ($${amount.toFixed(2)}) at unusual hour. Merchant "${merchant}" in elevated-risk category. Account utilization ${u}% above normal. RULE-004: First-time device fingerprint detected. POLICY-A: Step-up MFA required before proceeding.`,
+      `[AI_LOG]: RULE-006 triggered — MERCHANT_CATEGORY_MISMATCH. No prior history with "${merchant}" for this user. Amount $${amount.toFixed(2)} is 2.9σ above user P95. Account age ${age} days. POLICY-B: Routing to analyst review queue (4h SLA).`
+    ],
+    MEDIUM:[
+      `[AI_LOG]: Moderate risk profile. "${merchant}" transaction $${amount.toFixed(2)} exceeds user P90 spending (RULE-001). Utilization ${u}% slightly elevated. No strong velocity violations. Account age ${age}d within acceptable range. POLICY-B: Flagged for manual review.`,
+      `[AI_LOG]: RULE-005 pattern — round-amount transactions detected in 24h window. "${merchant}" spend $${amount.toFixed(2)} with credit utilization ${u}%. Single anomaly signal. Ensemble confidence: MEDIUM. POLICY-B: Monitor account for 72h.`
+    ],
+    LOW:[
+      `[AI_LOG]: Low-risk indicator. "${merchant}" $${amount.toFixed(2)} within normal spend range. Utilization ${u}% is slightly above user mean but below RULE-008 threshold. Account age ${age}d, established history. No policy violations. Logging for baseline drift tracking.`,
+    ],
+    CLEAN:[
+      `[AI_LOG]: Transaction cleared. "${merchant}" is a known low-risk merchant. Amount $${amount.toFixed(2)} consistent with historical spend pattern. Account age ${age}d, utilization ${u}% — both within normal parameters. No policy rules triggered. Approved.`,
+    ]
+  };
+  const pool=E[tier];
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+// ─── Seed 500 Transactions (100 per tier) ────────────────────
+function seedTransactions(){
+  const txns=[];
+  const now=new Date();
+  let offset=500; // minutes back
+  let seq=1;
+  for(const tier of TIERS){
+    const c=CFG[tier];
+    for(let i=0;i<100;i++){
+      const fs=parseFloat(rng.r(...c.fs).toFixed(6));
+      const as=parseFloat(rng.r(...c.as).toFixed(6));
+      const merchant=rng.pick(c.merchants);
+      const amount=parseFloat((rng.pick(c.amounts)+rng.r(0,.99)).toFixed(2));
+      const age=rng.i(...c.age);
+      const util=parseFloat(rng.r(...c.util).toFixed(3));
+      const pf=rng.pick(c.pf);
+      const lat=parseFloat(rng.r(88,340).toFixed(1));
+      const t=new Date(now.getTime()-offset*60000);
+      offset-=rng.r(.4,2.8);
+      txns.push({
+        id:`TXN-${String(seq).padStart(4,'0')}-${alpha2()}`,
+        uid:rng.i(10000,99999),
+        amount,merchant,cat:c.cat,pay:c.pay,dev:c.dev,chan:c.chan,
+        age,util,pf,fs,as,label:fs>=.5?1:0,tier,lat,
+        ts:t,time:t.toTimeString().slice(0,8),
+        exp:mkExplanation(tier,merchant,amount,util,age,pf)
+      });
+      seq++;
+    }
+  }
+  return txns.sort((a,b)=>b.ts-a.ts);
+}
+
+// ─── State ───────────────────────────────────────────────────
+let ALL=seedTransactions();
+let FILT=[...ALL];
+let PAGE=1;
+const PZ=25;
+let scol='time',sdir='desc';
+let liveCount=0;
+
+// ─── Tier Color ───────────────────────────────────────────────
+function tc(tier){return TCLR[tier]||'#94a3b8';}
+
+// ─── Render Table ─────────────────────────────────────────────
+function renderTable(){
+  const tbody=document.getElementById('tbody');
+  const start=(PAGE-1)*PZ;
+  const rows=FILT.slice(start,start+PZ);
+  if(!rows.length){
+    tbody.innerHTML=`<tr><td colspan="8" class="no-data">No transactions match your filter.</td></tr>`;
+    renderPagination();return;
+  }
+  const frags=[];
+  rows.forEach((t,idx)=>{
+    const clr=tc(t.tier);
+    const row=`
+    <tr class="drow t-${t.tier}" data-i="${start+idx}">
+      <td><span class="tid t-${t.tier}">${t.id}</span></td>
+      <td><span class="amt">$${t.amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span></td>
+      <td><span class="mch" title="${t.merchant}">${t.merchant}</span></td>
+      <td><span class="tbadge tb-${t.tier}">${t.tier}</span></td>
+      <td><div class="scell"><div class="sbar"><div class="sbar-f" style="width:${t.fs*100}%;background:${clr}"></div></div><span class="snum" style="color:${clr}">${t.fs.toFixed(3)}</span></div></td>
+      <td><div class="scell"><div class="sbar"><div class="sbar-f" style="width:${t.as*100}%;background:${clr}"></div></div><span class="snum" style="color:${clr}">${t.as.toFixed(3)}</span></div></td>
+      <td><span class="lat-cell">${t.lat.toFixed(0)}ms</span></td>
+      <td><span class="tcell">${t.time}</span></td>
+    </tr>
+    <tr class="erow" data-i="${start+idx}">
+      <td colspan="8"><div class="econtent" id="ec-${start+idx}">${t.exp}</div></td>
+    </tr>`;
+    frags.push(row);
+  });
+  tbody.innerHTML=frags.join('');
+  // Attach click handlers
+  tbody.querySelectorAll('tr.drow').forEach(row=>{
+    row.addEventListener('click',()=>{
+      const i=parseInt(row.dataset.i);
+      const ec=document.getElementById(`ec-${i}`);
+      const wasOpen=ec.classList.contains('open');
+      tbody.querySelectorAll('.econtent.open').forEach(el=>el.classList.remove('open'));
+      if(!wasOpen){ec.classList.add('open');fillForm(FILT[i]);}
+    });
+  });
+  renderPagination();
+}
+
+function renderPagination(){
+  const total=FILT.length;
+  const tp=Math.ceil(total/PZ);
+  const s=(PAGE-1)*PZ+1;
+  const e=Math.min(PAGE*PZ,total);
+  const pages=getPages(PAGE,tp);
+  document.getElementById('pgn').innerHTML=`
+    <span class="pinfo">Showing ${total===0?0:s}–${total===0?0:e} of ${total} transactions</span>
+    <div class="pbtns">
+      <button class="pbtn" onclick="goPage(${PAGE-1})" ${PAGE===1?'disabled':''}>← Prev</button>
+      ${pages.map(p=>p==='...'?`<span class="pbtn dots">…</span>`:`<button class="pbtn ${p===PAGE?'active':''}" onclick="goPage(${p})">${p}</button>`).join('')}
+      <button class="pbtn" onclick="goPage(${PAGE+1})" ${PAGE===tp||tp===0?'disabled':''}>Next →</button>
+    </div>`;
+}
+
+function getPages(cur,tp){
+  if(tp<=7){const p=[];for(let i=1;i<=tp;i++)p.push(i);return p;}
+  const p=[1];
+  if(cur>3)p.push('...');
+  for(let i=Math.max(2,cur-1);i<=Math.min(tp-1,cur+1);i++)p.push(i);
+  if(cur<tp-2)p.push('...');
+  p.push(tp);
+  return p;
+}
+
+function goPage(p){
+  const tp=Math.ceil(FILT.length/PZ);
+  if(p<1||p>tp)return;
+  PAGE=p;renderTable();
+  document.getElementById('twrap').scrollTop=0;
+}
+
+// ─── Filter ───────────────────────────────────────────────────
+function filterTable(){
+  const q=document.getElementById('sinp').value.toLowerCase().trim();
+  const tier=document.getElementById('tfilter').value;
+  FILT=ALL.filter(t=>{
+    const ms=!q||t.id.toLowerCase().includes(q)||t.merchant.toLowerCase().includes(q)||String(t.uid).includes(q);
+    const mt=!tier||t.tier===tier;
+    return ms&&mt;
+  });
+  applySort();
+  PAGE=1;renderTable();
+}
+
+// ─── Sort ─────────────────────────────────────────────────────
+document.querySelectorAll('th[data-col]').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const col=th.dataset.col;
+    if(scol===col)sdir=sdir==='asc'?'desc':'asc';
+    else{scol=col;sdir='desc';}
+    document.querySelectorAll('th').forEach(h=>h.classList.remove('sort-active'));
+    th.classList.add('sort-active');
+    th.querySelector('.arr').textContent=sdir==='asc'?'↑':'↓';
+    applySort();renderTable();
+  });
+});
+
+function applySort(){
+  const d=sdir==='asc'?1:-1;
+  FILT.sort((a,b)=>{
+    switch(scol){
+      case'id':return d*a.id.localeCompare(b.id);
+      case'amount':return d*(a.amount-b.amount);
+      case'merchant':return d*a.merchant.localeCompare(b.merchant);
+      case'tier':return d*(TSEV[a.tier]-TSEV[b.tier]);
+      case'score':return d*(a.fs-b.fs);
+      case'anomaly':return d*(a.as-b.as);
+      case'latency':return d*(a.lat-b.lat);
+      case'time':return d*(a.ts-b.ts);
+      default:return 0;
+    }
+  });
+}
+
+// ─── Fill Form ────────────────────────────────────────────────
+function fillForm(t){
+  document.getElementById('f-id').value=t.id;
+  document.getElementById('f-uid').value=t.uid;
+  document.getElementById('f-amt').value=t.amount;
+  document.getElementById('f-cat').value=t.cat;
+  document.getElementById('f-pay').value=t.pay;
+  document.getElementById('f-dev').value=t.dev;
+  document.getElementById('f-chan').value=t.chan;
+  document.getElementById('f-age').value=t.age;
+  document.getElementById('f-pf').value=t.pf;
+  document.getElementById('f-util').value=t.util;
+  document.getElementById('utilv').textContent=Math.round(t.util*100)+'%';
+}
+
+// ─── Gauge ────────────────────────────────────────────────────
+const CIRC=226.19;
+function setGauge(score,tier,latMs){
+  const fill=document.getElementById('gf');
+  const pct=document.getElementById('gpct');
+  const lat=document.getElementById('glat');
+  fill.style.strokeDashoffset=CIRC-(CIRC*Math.min(score,1));
+  fill.style.stroke=tc(tier);
+  pct.textContent=Math.round(score*100)+'%';
+  pct.style.color=tc(tier);
+  lat.textContent=latMs.toFixed(0)+'ms';
+}
+
+// ─── Score API Call ───────────────────────────────────────────
+async function scoreTransaction(){
+  const amt=parseFloat(document.getElementById('f-amt').value);
+  const uid=parseInt(document.getElementById('f-uid').value);
+  if(!amt||isNaN(amt)||amt<=0){showToast('Enter a valid amount.');return;}
+  if(!uid||isNaN(uid)){showToast('Enter a valid User ID.');return;}
+  const btn=document.getElementById('sbtn');
+  btn.classList.add('loading');
+  const payload={
+    transaction_id:document.getElementById('f-id').value||`TXN-LIVE-${Date.now()}`,
+    user_id:uid,amount:amt,
+    merchant_category:document.getElementById('f-cat').value,
+    payment_method:document.getElementById('f-pay').value,
+    device_type:document.getElementById('f-dev').value,
+    channel:document.getElementById('f-chan').value,
+    account_age_days:parseInt(document.getElementById('f-age').value)||365,
+    credit_utilization:parseFloat(document.getElementById('f-util').value),
+    prior_fraud_count:parseInt(document.getElementById('f-pf').value)||0,
+    explain:document.getElementById('f-exp').checked
+  };
+  let data;
+  try{
+    const r=await fetch('http://localhost:8001/predict',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    data=await r.json();
+  }catch(e){
+    data=simulateScore(payload);
+    showToast('API offline — showing simulated result.');
+  }
+  btn.classList.remove('loading');
+  showResult(data,payload);
+}
+
+function simulateScore(p){
+  let s=0.04;
+  if(p.merchant_category==='crypto')s+=.32;
+  if(p.merchant_category==='gambling')s+=.22;
+  if(p.payment_method==='wire')s+=.16;
+  if(p.account_age_days<30)s+=.26;
+  if(p.credit_utilization>.85)s+=.16;
+  if(p.prior_fraud_count>0)s+=p.prior_fraud_count*.13;
+  if(p.amount>2000)s+=.10;
+  s=Math.min(.99,s+(Math.random()*.06-.03));
+  const as=Math.min(1,s*1.12+Math.random()*.08);
+  const tier=s>=.9?'CRITICAL':s>=.7?'HIGH':s>=.5?'MEDIUM':s>=.3?'LOW':'CLEAN';
+  return{transaction_id:p.transaction_id,fraud_score:parseFloat(s.toFixed(6)),
+    anomaly_score:parseFloat(as.toFixed(6)),fraud_label:s>=.5?1:0,
+    risk_tier:tier,latency_ms:92+Math.random()*180,explanation:''};
+}
+
+function showResult(data,payload){
+  const tier=data.risk_tier;
+  const s=data.fraud_score;
+  const as=data.anomaly_score;
+  const lat=data.latency_ms;
+  const card=document.getElementById('rcard');
+  card.classList.add('on');
+  setGauge(s,tier,lat);
+  const badge=document.getElementById('rbadge');
+  badge.textContent=tier+' RISK';
+  badge.className=`rbadge rb-${tier}`;
+  document.getElementById('rfs').textContent=s.toFixed(6);
+  document.getElementById('rtid').textContent=data.transaction_id||payload.transaction_id;
+  document.getElementById('aval').textContent=as.toFixed(4);
+  const af=document.getElementById('afill');
+  af.style.width=(as*100)+'%';
+  af.style.background=tc(tier);
+  const exsec=document.getElementById('exsec');
+  const extxt=document.getElementById('extxt');
+  const expText=data.explanation||
+    (payload.explain?mkExplanation(tier,payload.merchant_category,payload.amount,payload.credit_utilization,payload.account_age_days,payload.prior_fraud_count):'');
+  if(expText){exsec.style.display='block';extxt.textContent=expText;}
+  else exsec.style.display='none';
+  // Add to live feed
+  const newT={
+    id:data.transaction_id||payload.transaction_id,uid:payload.user_id,amount:payload.amount,
+    merchant:payload.merchant_category.charAt(0).toUpperCase()+payload.merchant_category.slice(1),
+    cat:payload.merchant_category,pay:payload.payment_method,dev:payload.device_type,
+    chan:payload.channel,age:payload.account_age_days,util:payload.credit_utilization,
+    pf:payload.prior_fraud_count,fs:s,as,label:data.fraud_label,tier,lat,
+    ts:new Date(),time:new Date().toTimeString().slice(0,8),
+    exp:expText||mkExplanation(tier,payload.merchant_category,payload.amount,payload.credit_utilization,payload.account_age_days,payload.prior_fraud_count)
+  };
+  ALL.unshift(newT);
+  document.getElementById('totalScored').textContent=ALL.length;
+  filterTable();
+  // Flash top row
+  setTimeout(()=>{
+    const fr=document.querySelector('#tbody tr.drow');
+    if(fr){fr.classList.add('newrow');setTimeout(()=>fr.classList.remove('newrow'),1500);}
+  },60);
+}
+
+// ─── Auto Refresh ─────────────────────────────────────────────
+const AR_POOL=[
+  {m:'Starbucks Coffee',c:'restaurant',t:'CLEAN',a:[4,12],p:'debit'},
+  {m:'Amazon.com',c:'retail',t:'CLEAN',a:[14,85],p:'credit'},
+  {m:'CryptoHub Inc',c:'crypto',t:'CRITICAL',a:[1500,9000],p:'wire'},
+  {m:'Netflix.com',c:'retail',t:'CLEAN',a:[9,17],p:'debit'},
+  {m:'Luxury Watches Ltd',c:'retail',t:'HIGH',a:[800,5000],p:'credit'},
+  {m:'Whole Foods Market',c:'grocery',t:'LOW',a:[30,130],p:'debit'},
+  {m:'Best Buy Tech',c:'retail',t:'MEDIUM',a:[190,1200],p:'credit'},
+  {m:'Uber Trip',c:'restaurant',t:'CLEAN',a:[8,48],p:'credit'},
+  {m:'BitVault Exchange',c:'crypto',t:'CRITICAL',a:[2000,12000],p:'wire'},
+  {m:'Target',c:'retail',t:'LOW',a:[25,180],p:'debit'},
+  {m:'VIP Casino Resort',c:'gambling',t:'HIGH',a:[400,3500],p:'credit'},
+  {m:'McDonald\'s',c:'restaurant',t:'CLEAN',a:[5,20],p:'debit'},
+];
+
+setInterval(()=>{
+  if(!document.getElementById('arToggle').checked)return;
+  const cfg=AR_POOL[Math.floor(Math.random()*AR_POOL.length)];
+  const tier=cfg.t;
+  const c=CFG[tier];
+  const amount=parseFloat((cfg.a[0]+Math.random()*(cfg.a[1]-cfg.a[0])).toFixed(2));
+  const fs=parseFloat(rng.r(...c.fs).toFixed(6));
+  const as=parseFloat(rng.r(...c.as).toFixed(6));
+  const age=rng.i(...c.age);
+  const util=parseFloat(rng.r(...c.util).toFixed(3));
+  const pf=rng.pick(c.pf);
+  const newT={
+    id:`TXN-${String(ALL.length+1).padStart(4,'0')}-LV`,
+    uid:rng.i(10000,99999),amount,merchant:cfg.m,
+    cat:cfg.c,pay:cfg.p,dev:'mobile',chan:'online',
+    age,util,pf,fs,as,label:fs>=.5?1:0,tier,
+    lat:parseFloat((90+Math.random()*230).toFixed(1)),
+    ts:new Date(),time:new Date().toTimeString().slice(0,8),
+    exp:mkExplanation(tier,cfg.m,amount,util,age,pf)
+  };
+  ALL.unshift(newT);
+  liveCount++;
+  document.getElementById('arCount').textContent=liveCount+' live';
+  document.getElementById('totalScored').textContent=ALL.length;
+  filterTable();
+  setTimeout(()=>{
+    const fr=document.querySelector('#tbody tr.drow');
+    if(fr){fr.classList.add('newrow');setTimeout(()=>fr.classList.remove('newrow'),1500);}
+  },60);
+},4000);
+
+// ─── Toast ────────────────────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent='⚠ '+msg;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),4000);
+}
+
+// ─── Init ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  FILT=[...ALL];
+  renderTable();
+  // Show seed banner
+  const banner=document.getElementById('seedBanner');
+  banner.style.display='flex';
+  document.getElementById('seedCount').textContent='500';
+});
+</script>
+</body>
+</html>

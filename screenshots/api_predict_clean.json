@@ -1,0 +1,17 @@
+{
+  "transaction_id": "TXN-CLEAN-01",
+  "fraud_score": 0.000128,
+  "anomaly_score": 0.244228,
+  "fraud_label": 0,
+  "risk_tier": "CLEAN",
+  "explanation": "",
+  "latency_ms": 108.81,
+  "_request_summary": {
+    "amount": 12.4,
+    "merchant_category": "restaurant",
+    "payment_method": "debit",
+    "account_age_days": 2200,
+    "credit_utilization": 0.08,
+    "prior_fraud_count": 0
+  }
+}

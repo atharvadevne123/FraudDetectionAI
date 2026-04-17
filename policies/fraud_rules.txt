@@ -1,0 +1,51 @@
+RULE-001: HIGH_AMOUNT_VELOCITY
+If a user submits more than 5 transactions totaling over $2000 within a 1-hour window, flag for review.
+Risk level: HIGH. This pattern is consistent with account takeover or stolen card rapid liquidation.
+
+RULE-002: UNUSUAL_HOUR_LARGE_AMOUNT
+Transactions above $500 between 01:00-05:00 AM local time trigger elevated scrutiny.
+Risk level: MEDIUM. Most legitimate large purchases do not occur in late-night hours.
+
+RULE-003: CROSS_BORDER_VELOCITY
+Two or more transactions from different countries within 2 hours for the same account.
+Risk level: HIGH. Physical travel is impossible in this timeframe; indicates credential sharing or card cloning.
+
+RULE-004: NEW_DEVICE_HIGH_VALUE
+First-time device fingerprint combined with transaction amount exceeding the user's 95th percentile.
+Risk level: MEDIUM-HIGH. New devices with atypical spend warrant secondary verification.
+
+RULE-005: ROUND_AMOUNT_PATTERN
+Three or more consecutive round-dollar transactions (e.g., $100.00, $200.00) within 24 hours.
+Risk level: LOW-MEDIUM. Round amounts are common in card-testing (carding) fraud attempts.
+
+RULE-006: MERCHANT_CATEGORY_MISMATCH
+Transaction in high-risk merchant categories (crypto, wire transfer, gambling) from users with no prior history in those categories.
+Risk level: MEDIUM. Sudden category change is a behavioural anomaly.
+
+RULE-007: MULTI_IP_SESSION
+More than 3 distinct IP addresses used by one account in a single session.
+Risk level: HIGH. May indicate proxy/VPN rotation or session hijacking.
+
+RULE-008: CREDIT_UTILIZATION_SPIKE
+Credit utilization exceeds 90% within 48 hours for an account previously below 40%.
+Risk level: MEDIUM. Rapid drawdown is a known precursor to default and bust-out fraud.
+
+RULE-009: REPEATED_DECLINED_THEN_APPROVED
+More than 3 declines followed by an approval within 30 minutes on the same account.
+Risk level: MEDIUM-HIGH. May indicate card-stuffing or retrying with stolen credentials.
+
+RULE-010: PRIOR_FRAUD_HISTORY
+Any account with prior confirmed fraud within 12 months receives a baseline risk uplift of +0.2.
+Risk level: Context-dependent. Prior fraud is the single strongest predictor of future fraud.
+
+POLICY-A: STEP_UP_AUTHENTICATION
+Accounts flagged with risk score >= 0.7 must complete MFA before the transaction proceeds.
+
+POLICY-B: MANUAL_REVIEW_QUEUE
+Transactions with risk score in [0.5, 0.7) are routed to the analyst review queue with a 4-hour SLA.
+
+POLICY-C: AUTO_BLOCK
+Transactions with risk score >= 0.9 are automatically declined and the account is temporarily suspended pending investigation.
+
+POLICY-D: SAR_FILING
+Confirmed fraud losses exceeding $5,000 require a Suspicious Activity Report filed within 30 days per BSA/AML compliance.
