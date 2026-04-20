@@ -75,9 +75,10 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.api
     ports:
-      - "5000:5000"
+      - "8001:8001"
     environment:
       MODEL_DIR: /opt/models
+      PORT: "8001"
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}

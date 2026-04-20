@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1400">
 <title>SENTINELLA | Real-Time Fraud Analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -344,7 +345,22 @@ tr.newrow{animation:flash 1.5s ease-out;}
           <span class="trk"></span>
         </label>
         <span class="ar-count" id="arCount">0 live</span>
+        <button class="ico-btn" onclick="exportCSV()" title="Export CSV"
+          style="font-size:10px;width:auto;padding:0 10px;letter-spacing:.5px;font-weight:700;color:var(--acc);">
+          ⬇ CSV
+        </button>
       </div>
+    </div>
+    <div id="tierCounts" style="display:flex;gap:8px;padding:7px 14px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;align-items:center;">
+      <span id="cnt-CRITICAL" class="tbadge tb-CRITICAL" style="font-size:10px;padding:3px 9px;">CRITICAL: 0</span>
+      <span id="cnt-HIGH"     class="tbadge tb-HIGH"     style="font-size:10px;padding:3px 9px;">HIGH: 0</span>
+      <span id="cnt-MEDIUM"   class="tbadge tb-MEDIUM"   style="font-size:10px;padding:3px 9px;">MEDIUM: 0</span>
+      <span id="cnt-LOW"      class="tbadge tb-LOW"       style="font-size:10px;padding:3px 9px;">LOW: 0</span>
+      <span id="cnt-CLEAN"    class="tbadge tb-CLEAN"     style="font-size:10px;padding:3px 9px;">CLEAN: 0</span>
+    </div>
+    <div style="padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:10px;font-weight:700;letter-spacing:.7px;color:var(--txt3);text-transform:uppercase;white-space:nowrap;">Score Trend (last 20)</span>
+      <canvas id="trendChart" style="flex:1;height:38px;max-height:38px;"></canvas>
     </div>
     <div class="fctl">
       <div class="swrap">
@@ -554,6 +570,7 @@ function renderTable(){
     });
   });
   renderPagination();
+  updateTierCounts();
 }
 
 function renderPagination(){
@@ -599,6 +616,7 @@ function filterTable(){
   });
   applySort();
   PAGE=1;renderTable();
+  updateTierCounts();
 }
 
 // ─── Sort ─────────────────────────────────────────────────────
@@ -746,6 +764,7 @@ function showResult(data,payload){
     exp:expText||mkExplanation(tier,payload.merchant_category,payload.amount,payload.credit_utilization,payload.account_age_days,payload.prior_fraud_count)
   };
   ALL.unshift(newT);
+  updateTrendChart(s);
   document.getElementById('totalScored').textContent=ALL.length;
   filterTable();
   // Flash top row
@@ -792,6 +811,7 @@ setInterval(()=>{
     exp:mkExplanation(tier,cfg.m,amount,util,age,pf)
   };
   ALL.unshift(newT);
+  updateTrendChart(fs);
   liveCount++;
   document.getElementById('arCount').textContent=liveCount+' live';
   document.getElementById('totalScored').textContent=ALL.length;
@@ -809,10 +829,76 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('on'),4000);
 }
 
+// ─── Tier Counts ──────────────────────────────────────────────
+function updateTierCounts(){
+  const counts={CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0,CLEAN:0};
+  FILT.forEach(t=>{if(counts[t.tier]!==undefined)counts[t.tier]++;});
+  ['CRITICAL','HIGH','MEDIUM','LOW','CLEAN'].forEach(tier=>{
+    const el=document.getElementById('cnt-'+tier);
+    if(el)el.textContent=tier+': '+counts[tier];
+  });
+}
+
+// ─── CSV Export ───────────────────────────────────────────────
+function exportCSV(){
+  const headers=['Transaction ID','User ID','Amount','Merchant','Tier','Fraud Score','Anomaly Score','Latency (ms)','Time'];
+  const rows=FILT.map(t=>[
+    t.id,t.uid,t.amount.toFixed(2),
+    '"'+t.merchant.replace(/"/g,'""')+'"',
+    t.tier,t.fs.toFixed(6),t.as.toFixed(6),t.lat.toFixed(1),t.time
+  ].join(','));
+  const csv=[headers.join(','),...rows].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='sentinella_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+// ─── Trend Chart ──────────────────────────────────────────────
+let trendChart=null;
+let trendScores=[];
+
+function initTrendChart(){
+  const ctx=document.getElementById('trendChart');
+  if(!ctx)return;
+  trendChart=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:Array(20).fill(''),
+      datasets:[{
+        data:Array(20).fill(null),
+        borderColor:'#6366f1',borderWidth:1.5,pointRadius:0,tension:0.4,
+        fill:{target:'origin',above:'rgba(99,102,241,0.08)'}
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{x:{display:false},y:{display:false,min:0,max:1}}
+    }
+  });
+}
+
+function updateTrendChart(score){
+  if(!trendChart)return;
+  trendScores.push(score);
+  if(trendScores.length>20)trendScores.shift();
+  trendChart.data.datasets[0].data=[
+    ...Array(20-trendScores.length).fill(null),...trendScores
+  ];
+  trendChart.update('none');
+}
+
 // ─── Init ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
   FILT=[...ALL];
   renderTable();
+  initTrendChart();
+  // Seed initial trend from seeded data
+  ALL.slice(0,20).forEach(t=>updateTrendChart(t.fs));
   // Show seed banner
   const banner=document.getElementById('seedBanner');
   banner.style.display='flex';
