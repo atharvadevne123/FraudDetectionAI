@@ -20,7 +20,6 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
-    classification_report,
 )
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE

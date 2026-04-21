@@ -94,7 +94,6 @@ def _load_models():
     from models.anomaly.anomaly_detector import AnomalyDetector
     from models.ensemble.fraud_classifier import FraudEnsemble
     from models.rag.rag_explainer import RAGExplainer
-    from pipeline.feature_engineering import TransactionFeatureEngineer
 
     ensemble_path = MODEL_DIR / "fraud_ensemble.joblib"
     anomaly_path  = MODEL_DIR / "anomaly_detector.joblib"
