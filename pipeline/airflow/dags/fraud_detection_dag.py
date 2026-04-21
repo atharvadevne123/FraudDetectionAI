@@ -11,15 +11,13 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 import boto3
 import pandas as pd
 from airflow import DAG
 from airflow.decorators import task
-from airflow.models import Variable
-from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from loguru import logger
 
@@ -121,7 +119,6 @@ with DAG(
         import sys
         sys.path.insert(0, "/opt/airflow")
         from models.anomaly.anomaly_detector import AnomalyDetector
-        import joblib
 
         df = pd.read_parquet(feat_path)
         numeric_cols = df.select_dtypes(include="number").columns.tolist()
@@ -153,7 +150,6 @@ with DAG(
         import sys
         sys.path.insert(0, "/opt/airflow")
         from models.ensemble.fraud_classifier import FraudEnsemble
-        import joblib
 
         df = pd.read_parquet(anomaly_path)
         exclude = {"is_fraud", "transaction_id", "user_id", "timestamp",
@@ -193,7 +189,6 @@ with DAG(
         sys.path.insert(0, "/opt/airflow")
         from models.rag.rag_explainer import RAGExplainer
         from models.ensemble.fraud_classifier import FraudEnsemble
-        import joblib
 
         df = pd.read_parquet(scored_path)
         flagged = df[df["fraud_score"] >= 0.5].copy()
