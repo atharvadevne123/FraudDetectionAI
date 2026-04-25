@@ -1,3 +1,5 @@
+![Docker](https://github.com/atharvadevne123/FraudDetectionAI/actions/workflows/docker-publish.yml/badge.svg) ![Python Package](https://github.com/atharvadevne123/FraudDetectionAI/actions/workflows/python-publish.yml/badge.svg) ![Bump Version](https://github.com/atharvadevne123/FraudDetectionAI/actions/workflows/bump-version.yml/badge.svg)
+
 # SENTINELLA — Real-Time Fraud Detection System with Explainable AI
 
 > End-to-end ML pipeline for financial transaction fraud detection combining unsupervised anomaly detection, a supervised ensemble, RAG-powered explanations, and a real-time analyst dashboard — deployed via Docker on AWS.
