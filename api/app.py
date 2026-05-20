@@ -16,6 +16,7 @@ import os
 import time
 import uuid
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 from flask import Flask, g, jsonify, request
@@ -85,7 +86,7 @@ _rag_explainer = None
 _feature_cols: list = []
 
 
-def _load_models():
+def _load_models() -> None:
     global _ensemble, _anomaly_detector, _feature_engineer, _rag_explainer, _feature_cols
     import sys
     sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -199,7 +200,7 @@ _OPEN_PATHS = {"/health", "/metrics", "/swagger.json"}
 
 
 @limiter.request_filter
-def _exempt_health_metrics():
+def _exempt_health_metrics() -> bool:
     """Health and metrics endpoints are exempt from rate limiting."""
     return request.path in ("/health", "/metrics") or request.path.startswith("/docs")
 
@@ -219,12 +220,12 @@ def _check_api_key():
 # ─── Request ID ───────────────────────────────────────────────────────────────
 
 @app.before_request
-def _attach_request_id():
+def _attach_request_id() -> None:
     g.request_id = str(uuid.uuid4())
 
 
 @app.after_request
-def _add_request_id_header(response):
+def _add_request_id_header(response: Any) -> Any:
     response.headers["X-Request-ID"] = getattr(g, "request_id", "")
     return response
 
@@ -233,7 +234,7 @@ def _add_request_id_header(response):
 # Use @api.errorhandler so flask-restx doesn't override them.
 
 @api.errorhandler(Exception)
-def handle_generic(e):
+def handle_generic(e: Exception) -> tuple[dict, int]:
     code = getattr(e, "code", 500)
     return {"error": type(e).__name__, "detail": str(e)}, code
 
