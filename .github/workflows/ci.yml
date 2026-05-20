@@ -11,8 +11,8 @@ jobs:
     name: Lint (ruff)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
@@ -23,22 +23,31 @@ jobs:
     name: Tests (pytest + coverage)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
       - name: Run tests
-        run: pytest tests/ --cov=api --cov=pipeline --cov=models --cov-report=term-missing -v
+        run: pytest tests/ --cov=api --cov=pipeline --cov=models --cov-report=term-missing --cov-report=xml -v
         env:
           API_KEY: ""
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 14
 
   build-docker:
     name: Docker Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - name: Build API image
         run: docker build -f docker/Dockerfile.api -t fraud-detection-api:ci .
