@@ -132,18 +132,22 @@ class AnomalyDetector:
 
     @staticmethod
     def _minmax(scores: np.ndarray) -> dict[str, float]:
+        """Return min/max statistics of a score array for normalisation."""
         return {"s_min": float(scores.min()), "s_max": float(scores.max())}
 
     @staticmethod
     def _normalise_fixed(scores: np.ndarray, s_min: float, s_max: float) -> np.ndarray:
+        """Normalise scores to [0, 1] using fixed training-time min/max bounds."""
         if s_max == s_min:
             return np.zeros_like(scores)
         return (scores - s_min) / (s_max - s_min)
 
     @staticmethod
     def _to_array(X: Union[pd.DataFrame, np.ndarray]) -> np.ndarray:
+        """Convert DataFrame or array-like to a plain numpy array."""
         return X.values if isinstance(X, pd.DataFrame) else np.asarray(X)
 
     def _check_fitted(self) -> None:
+        """Raise RuntimeError if the detector has not been fitted yet."""
         if not self._fitted:
             raise RuntimeError("Fit the AnomalyDetector before calling score/predict.")
