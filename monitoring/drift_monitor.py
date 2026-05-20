@@ -161,6 +161,7 @@ class DriftMonitor:
     # ------------------------------------------------------------------
 
     def _check_score_shift(self, current: pd.DataFrame) -> float:
+        """Return mean fraud_score delta (current − reference); 0.0 if column absent."""
         if "fraud_score" not in current.columns or "fraud_score" not in self._reference.columns:
             return 0.0
         ref_mean = self._reference["fraud_score"].mean()
@@ -171,6 +172,7 @@ class DriftMonitor:
         return float(shift)
 
     def _check_missing(self, current: pd.DataFrame) -> float:
+        """Compute fraction of missing values across all cells in the batch."""
         total = current.size
         missing = current.isnull().sum().sum()
         return round(missing / total, 4) if total > 0 else 0.0
@@ -221,11 +223,13 @@ class DriftMonitor:
     # ------------------------------------------------------------------
 
     def _save_report(self, summary: dict[str, Any]) -> None:
+        """Persist the drift summary as a timestamped JSON file."""
         ts = summary["run_timestamp"].replace(":", "-")[:19]
         path = MONITOR_DIR / f"drift_report_{ts}.json"
         path.write_text(json.dumps(summary, indent=2, default=str))
 
     def _load_reference(self) -> None:
+        """Load persisted reference distribution from parquet if available."""
         if REFERENCE_PATH.exists():
             self._reference = pd.read_parquet(REFERENCE_PATH)
             logger.info("Reference distribution loaded ({:,} rows).", len(self._reference))
