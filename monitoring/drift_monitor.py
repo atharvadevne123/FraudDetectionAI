@@ -7,7 +7,7 @@ Exports Power BI-compatible JSON/CSV for dashboard consumption.
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -55,7 +55,7 @@ class DriftMonitor:
         df.to_parquet(REFERENCE_PATH, index=False)
         logger.info("Reference distribution saved ({:,} samples).", len(df))
 
-    def run(self, current: pd.DataFrame) -> dict:
+    def run(self, current: pd.DataFrame) -> dict[str, Any]:
         """
         Run full drift analysis on current batch vs reference.
         Returns dict with drift_detected flag and per-feature stats.
@@ -102,7 +102,7 @@ class DriftMonitor:
     # Evidently integration
     # ------------------------------------------------------------------
 
-    def _run_evidently(self, current: pd.DataFrame, numeric_cols: list[str]) -> dict:
+    def _run_evidently(self, current: pd.DataFrame, numeric_cols: list[str]) -> dict[str, Any]:
         ref = self._reference[numeric_cols].copy()
         cur = current[numeric_cols].copy()
 
@@ -140,7 +140,7 @@ class DriftMonitor:
             logger.warning("Evidently report failed: {}", e)
             return self._fallback_drift_check(current, numeric_cols)
 
-    def _fallback_drift_check(self, current: pd.DataFrame, cols: list[str]) -> dict:
+    def _fallback_drift_check(self, current: pd.DataFrame, cols: list[str]) -> dict[str, Any]:
         """KS-based drift check when Evidently fails."""
         from scipy import stats
         drifted = []
@@ -179,7 +179,7 @@ class DriftMonitor:
     # Power BI export
     # ------------------------------------------------------------------
 
-    def _export_powerbi(self, current: pd.DataFrame, summary: dict) -> None:
+    def _export_powerbi(self, current: pd.DataFrame, summary: dict[str, Any]) -> None:
         """
         Exports two flat files for Power BI consumption:
           1. powerbi_transactions.csv   — scored transaction-level data
@@ -220,7 +220,7 @@ class DriftMonitor:
     # Persistence
     # ------------------------------------------------------------------
 
-    def _save_report(self, summary: dict) -> None:
+    def _save_report(self, summary: dict[str, Any]) -> None:
         ts = summary["run_timestamp"].replace(":", "-")[:19]
         path = MONITOR_DIR / f"drift_report_{ts}.json"
         path.write_text(json.dumps(summary, indent=2, default=str))
