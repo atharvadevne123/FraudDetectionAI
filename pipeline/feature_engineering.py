@@ -110,18 +110,25 @@ class TransactionFeatureEngineer:
         return df
 
     def _velocity_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Transaction counts and total amounts within rolling windows per user."""
+        """Transaction counts and total amounts within rolling windows per user.
+
+        Preserves the original DataFrame index so downstream alignment is stable.
+        """
         if "user_id" not in df.columns or "timestamp" not in df.columns:
             return df
         df = df.sort_values("timestamp")
         ts = pd.to_datetime(df["timestamp"])
+
         for window in self.velocity_windows:
-            cutoff = ts - pd.Timedelta(days=window)
-            counts, totals = [], []
-            for i, (uid, t) in enumerate(zip(df["user_id"], ts)):
-                mask = (df["user_id"] == uid) & (ts >= cutoff.iloc[i]) & (ts < t)
-                counts.append(mask.sum())
-                totals.append(df.loc[mask, "amount"].sum())
+            delta = pd.Timedelta(days=window)
+            counts: list[int] = []
+            totals: list[float] = []
+            for idx in df.index:
+                uid = df.at[idx, "user_id"]
+                t = ts.at[idx]
+                mask = (df["user_id"] == uid) & (ts >= t - delta) & (ts < t)
+                counts.append(int(mask.sum()))
+                totals.append(float(df.loc[mask, "amount"].sum()))
             df[f"txn_count_{window}d"] = counts
             df[f"txn_total_{window}d"] = totals
         return df
