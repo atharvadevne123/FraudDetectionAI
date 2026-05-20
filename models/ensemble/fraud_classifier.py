@@ -12,7 +12,7 @@ import joblib
 import shap
 from pathlib import Path
 from loguru import logger
-from typing import Optional
+from typing import Optional, Union
 
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.calibration import CalibratedClassifierCV
@@ -159,7 +159,7 @@ class FraudEnsemble:
         proba = self.predict_proba(X)[:, 1]
         return (proba >= threshold).astype(int)
 
-    def explain(self, X: pd.DataFrame, max_display: int = 10) -> dict:
+    def explain(self, X: pd.DataFrame, max_display: int = 10) -> Union[list[dict], dict]:
         """Return SHAP values and top-k feature contributions for each row."""
         if self._shap_explainer is None:
             return {"error": "SHAP explainer not available."}
@@ -182,14 +182,14 @@ class FraudEnsemble:
     # Persistence
     # ------------------------------------------------------------------
 
-    def save(self, path=None) -> Path:
+    def save(self, path: Union[str, Path, None] = None) -> Path:
         path = Path(path) if path else ARTIFACT_DIR / "fraud_ensemble.joblib"
         joblib.dump(self, path)
         logger.info("FraudEnsemble saved → {}", path)
         return path
 
     @classmethod
-    def load(cls, path=None) -> "FraudEnsemble":
+    def load(cls, path: Union[str, Path, None] = None) -> "FraudEnsemble":
         path = Path(path) if path else ARTIFACT_DIR / "fraud_ensemble.joblib"
         obj = joblib.load(path)
         logger.info("FraudEnsemble loaded ← {}", path)
@@ -199,7 +199,7 @@ class FraudEnsemble:
     # Helpers
     # ------------------------------------------------------------------
 
-    def _log_metrics(self, X_train, y_train, eval_X, eval_y):
+    def _log_metrics(self, X_train: np.ndarray, y_train: np.ndarray, eval_X: Optional[pd.DataFrame], eval_y: Optional[pd.Series]) -> None:
         train_proba = self.ensemble.predict_proba(X_train)[:, 1]
         mlflow.log_metric("train_auc_roc", roc_auc_score(y_train, train_proba))
         mlflow.log_metric("train_avg_precision", average_precision_score(y_train, train_proba))
@@ -210,6 +210,6 @@ class FraudEnsemble:
             mlflow.log_metric("val_avg_precision", average_precision_score(eval_y, eval_proba))
             logger.info("Val AUC-ROC: {:.4f}", roc_auc_score(eval_y, eval_proba))
 
-    def _check_fitted(self):
+    def _check_fitted(self) -> None:
         if not self._fitted:
             raise RuntimeError("Fit FraudEnsemble before calling predict.")
