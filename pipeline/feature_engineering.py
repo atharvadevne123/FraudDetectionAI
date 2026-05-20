@@ -5,6 +5,7 @@ Generates behavioral, velocity, and statistical features from raw transaction st
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Optional
 
 import numpy as np
@@ -67,6 +68,12 @@ class TransactionFeatureEngineer:
 
     def fit_transform(self, df: pd.DataFrame) -> pd.DataFrame:
         return self.fit(df).transform(df)
+
+    @lru_cache(maxsize=256)
+    def _get_category_freq(self, col: str, value: str) -> float:
+        """Return frequency-encoded value for a category, cached for performance."""
+        freq_map = self._category_maps.get(col, {})
+        return float(freq_map.get(value, 0.0))
 
     # ------------------------------------------------------------------
     # Feature groups
