@@ -7,6 +7,7 @@ Usage:
 import argparse
 import json
 import sys
+from argparse import Namespace
 from pathlib import Path
 
 import joblib
@@ -23,7 +24,7 @@ from models.ensemble.fraud_classifier import FraudEnsemble
 from monitoring.drift_monitor import DriftMonitor
 
 
-def parse_args():
+def parse_args() -> Namespace:
     p = argparse.ArgumentParser(description="Train fraud detection models")
     p.add_argument("--data", type=str, default="data/raw/transactions.parquet",
                    help="Path to labelled transaction parquet file")
@@ -70,7 +71,7 @@ def generate_synthetic_data(n: int = 50_000) -> pd.DataFrame:
     return df
 
 
-def main():
+def main() -> None:
     args = parse_args()
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
