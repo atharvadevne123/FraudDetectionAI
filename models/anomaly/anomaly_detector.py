@@ -104,10 +104,16 @@ class AnomalyDetector:
         return (scores >= threshold).astype(int)
 
     def score_and_predict(self, X: Union[pd.DataFrame, np.ndarray]) -> pd.DataFrame:
+        """Return a DataFrame with composite anomaly_score and binary is_anomaly columns."""
         X_arr = self._to_array(X)
         scores = self.score(X_arr)
         labels = (scores >= (1 - self.contamination)).astype(int)
         return pd.DataFrame({"anomaly_score": scores, "is_anomaly": labels})
+
+    def predict_proba(self, X: Union[pd.DataFrame, np.ndarray]) -> np.ndarray:
+        """Return 2-column probability matrix [[P(normal), P(anomaly)]] per sample."""
+        scores = self.score(X)
+        return np.column_stack([1.0 - scores, scores])
 
     # ------------------------------------------------------------------
     # Persistence
