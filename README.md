@@ -1,4 +1,4 @@
-![Docker](https://github.com/atharvadevne123/FraudDetectionAI/actions/workflows/docker-publish.yml/badge.svg) ![Python Package](https://github.com/atharvadevne123/FraudDetectionAI/actions/workflows/python-publish.yml/badge.svg) ![Bump Version](https://github.com/atharvadevne123/FraudDetectionAI/actions/workflows/bump-version.yml/badge.svg)
+![CI](https://github.com/atharvadevne123/FraudDetectionAI/actions/workflows/ci.yml/badge.svg) ![Docker](https://github.com/atharvadevne123/FraudDetectionAI/actions/workflows/docker-publish.yml/badge.svg) ![Python Package](https://github.com/atharvadevne123/FraudDetectionAI/actions/workflows/python-publish.yml/badge.svg) ![Bump Version](https://github.com/atharvadevne123/FraudDetectionAI/actions/workflows/bump-version.yml/badge.svg)
 
 # SENTINELLA — Real-Time Fraud Detection System with Explainable AI
 
@@ -404,6 +404,43 @@ After each Airflow run, two CSVs are written to `monitoring/reports/`:
 - `powerbi_drift_kpis.csv` — running KPI log: fraud rate, drift flag, score distribution
 
 Connect Power BI Desktop directly to these files for live monitoring.
+
+---
+
+## Testing
+
+```bash
+# Install dev dependencies
+pip install -r requirements.txt pytest pytest-cov
+
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=. --cov-report=term-missing
+
+# Run a specific test module
+pytest tests/test_anomaly_detector_extended.py -v
+pytest tests/test_fraud_classifier.py -v
+pytest tests/test_feature_engineering_extended.py -v
+```
+
+Test suite covers:
+
+| Module | Tests |
+|---|---|
+| `AnomalyDetector` | init, score shape/range, DataFrame input, persistence |
+| `FraudEnsemble` | fit, predict, SMOTE, SHAP explanations, persistence |
+| `TransactionFeatureEngineer` | amount features, temporal, categorical encoding, behavioral |
+| `RAGExplainer` | index build, semantic search, LLM explanation |
+| `DriftMonitor` | reference setting, drift detection, thresholds |
+| Flask API | `/version`, `/readiness`, `/model/info` endpoints |
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, workflow, and commit conventions.
 
 ---
 
