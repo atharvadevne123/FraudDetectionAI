@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import pytest
 
 
 class TestHealth:
@@ -153,3 +154,71 @@ class TestErrorHandlers:
         assert r.status_code == 404
         data = r.get_json()
         assert "error" in data
+
+
+class TestPredictParametrized:
+    @pytest.mark.parametrize("amount", [0.01, 100.0, 9999.99, 1_000_000.0])
+    def test_predict_valid_amounts(self, client, patch_models, amount):
+        r = client.post("/predict",
+                        data=json.dumps({"user_id": 1, "amount": amount}),
+                        content_type="application/json")
+        assert r.status_code == 200
+
+    @pytest.mark.parametrize("invalid_amount", [0.0, -1.0, -0.01])
+    def test_predict_invalid_amounts_rejected(self, client, patch_models, invalid_amount):
+        r = client.post("/predict",
+                        data=json.dumps({"user_id": 1, "amount": invalid_amount}),
+                        content_type="application/json")
+        assert r.status_code == 400
+
+    @pytest.mark.parametrize("credit_util", [0.0, 0.5, 1.0])
+    def test_predict_valid_credit_utilization(self, client, patch_models, credit_util):
+        r = client.post("/predict",
+                        data=json.dumps({"user_id": 1, "amount": 100.0, "credit_utilization": credit_util}),
+                        content_type="application/json")
+        assert r.status_code == 200
+
+    @pytest.mark.parametrize("channel", ["online", "in-store", "mobile", "atm"])
+    def test_predict_various_channels(self, client, patch_models, channel):
+        r = client.post("/predict",
+                        data=json.dumps({"user_id": 1, "amount": 50.0, "channel": channel}),
+                        content_type="application/json")
+        assert r.status_code == 200
+
+    def test_predict_response_has_all_fields(self, client, patch_models, valid_transaction):
+        r = client.post("/predict", data=json.dumps(valid_transaction),
+                        content_type="application/json")
+        data = r.get_json()
+        for field in ("fraud_score", "anomaly_score", "fraud_label", "risk_tier", "latency_ms"):
+            assert field in data
+
+    def test_predict_fraud_label_is_binary(self, client, patch_models, valid_transaction):
+        r = client.post("/predict", data=json.dumps(valid_transaction),
+                        content_type="application/json")
+        data = r.get_json()
+        assert data["fraud_label"] in (0, 1)
+
+
+class TestBatchPredictParametrized:
+    @pytest.mark.parametrize("batch_size", [1, 10, 100])
+    def test_batch_various_sizes(self, client, patch_models, valid_transaction, batch_size):
+        txns = [valid_transaction] * batch_size
+        r = client.post("/predict/batch",
+                        data=json.dumps({"transactions": txns}),
+                        content_type="application/json")
+        assert r.status_code == 200
+        assert r.get_json()["count"] == batch_size
+
+    def test_batch_exactly_at_limit(self, client, patch_models, valid_transaction):
+        txns = [valid_transaction] * 500
+        r = client.post("/predict/batch",
+                        data=json.dumps({"transactions": txns}),
+                        content_type="application/json")
+        assert r.status_code == 200
+
+    def test_batch_one_over_limit_rejected(self, client, patch_models, valid_transaction):
+        txns = [valid_transaction] * 501
+        r = client.post("/predict/batch",
+                        data=json.dumps({"transactions": txns}),
+                        content_type="application/json")
+        assert r.status_code == 400
