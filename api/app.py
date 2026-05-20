@@ -206,26 +206,34 @@ def _exempt_health_metrics() -> bool:
 
 
 @app.before_request
-def _check_api_key():
+def _check_api_key() -> Optional[tuple]:
+    """Enforce API key authentication for all non-open endpoints.
+
+    Returns:
+        None to allow the request, or a 401 JSON response tuple if auth fails.
+    """
     if not _API_KEY:
-        return
+        return None
     path = request.path
     if path in _OPEN_PATHS or path.startswith("/docs"):
-        return
+        return None
     if request.headers.get("X-Api-Key", "") != _API_KEY:
         REQUEST_COUNT.labels(endpoint="auth", status="401").inc()
         return jsonify({"error": "Unauthorized", "detail": "Invalid or missing X-Api-Key header"}), 401
+    return None
 
 
 # ─── Request ID ───────────────────────────────────────────────────────────────
 
 @app.before_request
 def _attach_request_id() -> None:
+    """Attach a unique UUID to the request context for correlation logging."""
     g.request_id = str(uuid.uuid4())
 
 
 @app.after_request
 def _add_request_id_header(response: Any) -> Any:
+    """Propagate the request ID as a response header for client-side tracing."""
     response.headers["X-Request-ID"] = getattr(g, "request_id", "")
     return response
 
