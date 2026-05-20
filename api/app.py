@@ -250,6 +250,19 @@ def rate_limit_exceeded(e):
 
 # ─── Core scoring logic ───────────────────────────────────────────────────────
 
+def _determine_risk_tier(fraud_score: float) -> str:
+    """Map a fraud probability to a categorical risk tier."""
+    if fraud_score >= THRESHOLD_CRITICAL:
+        return "CRITICAL"
+    if fraud_score >= THRESHOLD_HIGH:
+        return "HIGH"
+    if fraud_score >= THRESHOLD_MEDIUM:
+        return "MEDIUM"
+    if fraud_score >= THRESHOLD_LOW:
+        return "LOW"
+    return "CLEAN"
+
+
 def _score_transaction(txn: dict) -> dict:
     """Run anomaly + ensemble scoring and optionally RAG explanation."""
     start = time.perf_counter()
@@ -288,16 +301,7 @@ def _score_transaction(txn: dict) -> dict:
         import random
         fraud_score = round(random.uniform(0.01, 0.95), 4)
 
-    if fraud_score >= THRESHOLD_CRITICAL:
-        risk_tier = "CRITICAL"
-    elif fraud_score >= THRESHOLD_HIGH:
-        risk_tier = "HIGH"
-    elif fraud_score >= THRESHOLD_MEDIUM:
-        risk_tier = "MEDIUM"
-    elif fraud_score >= THRESHOLD_LOW:
-        risk_tier = "LOW"
-    else:
-        risk_tier = "CLEAN"
+    risk_tier = _determine_risk_tier(fraud_score)
 
     explanation = ""
     if txn.get("explain") and _rag_explainer is not None:
