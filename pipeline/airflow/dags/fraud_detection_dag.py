@@ -90,6 +90,7 @@ with DAG(
 
     @task(task_id="feature_engineering")
     def feature_engineering(raw_path: str) -> str:
+        """Load or fit the TransactionFeatureEngineer and produce enriched feature parquet."""
         import sys
         sys.path.insert(0, "/opt/airflow")
         from pipeline.feature_engineering import TransactionFeatureEngineer
@@ -117,6 +118,7 @@ with DAG(
 
     @task(task_id="anomaly_scoring")
     def anomaly_scoring(feat_path: str) -> str:
+        """Score transactions with the anomaly detector ensemble; attach scores to DataFrame."""
         import sys
         sys.path.insert(0, "/opt/airflow")
         from models.anomaly.anomaly_detector import AnomalyDetector
@@ -247,13 +249,18 @@ with DAG(
 
     @task(task_id="drift_check")
     def drift_check(explained_path: str) -> None:
+        """Run Evidently drift detection and alert on score distribution shifts."""
         import sys
         sys.path.insert(0, "/opt/airflow")
         from monitoring.drift_monitor import DriftMonitor
 
         df = pd.read_parquet(explained_path)
         monitor = DriftMonitor()
-        report = monitor.run(df)
+        try:
+            report = monitor.run(df)
+        except Exception as exc:
+            logger.error("Drift check failed: {}. Continuing pipeline.", exc)
+            return
         if report.get("drift_detected"):
             logger.warning("DATA DRIFT DETECTED! Metrics: {}", report)
         else:
