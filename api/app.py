@@ -120,8 +120,11 @@ def _load_models() -> None:
     if cols_path.exists():
         _feature_cols = json.loads(cols_path.read_text())
 
-    _rag_explainer = RAGExplainer()
-    logger.success("RAG explainer initialised.")
+    try:
+        _rag_explainer = RAGExplainer()
+        logger.success("RAG explainer initialised.")
+    except Exception as exc:
+        logger.warning("RAG explainer failed to initialise: {}. Explanations disabled.", exc)
 
 
 # ─── Input validation ─────────────────────────────────────────────────────────
