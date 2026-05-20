@@ -200,6 +200,7 @@ class FraudEnsemble:
     # ------------------------------------------------------------------
 
     def _log_metrics(self, X_train: np.ndarray, y_train: np.ndarray, eval_X: Optional[pd.DataFrame], eval_y: Optional[pd.Series]) -> None:
+        """Log AUC-ROC and average-precision metrics to the active MLflow run."""
         train_proba = self.ensemble.predict_proba(X_train)[:, 1]
         mlflow.log_metric("train_auc_roc", roc_auc_score(y_train, train_proba))
         mlflow.log_metric("train_avg_precision", average_precision_score(y_train, train_proba))
@@ -211,5 +212,6 @@ class FraudEnsemble:
             logger.info("Val AUC-ROC: {:.4f}", roc_auc_score(eval_y, eval_proba))
 
     def _check_fitted(self) -> None:
+        """Raise RuntimeError if the ensemble has not been fitted."""
         if not self._fitted:
             raise RuntimeError("Fit FraudEnsemble before calling predict.")
