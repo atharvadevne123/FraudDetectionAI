@@ -152,10 +152,12 @@ class FraudEnsemble:
     # ------------------------------------------------------------------
 
     def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+        """Return class probability matrix of shape (n_samples, 2)."""
         self._check_fitted()
         return self.ensemble.predict_proba(self.scaler.transform(X.values))
 
     def predict(self, X: pd.DataFrame, threshold: float = 0.5) -> np.ndarray:
+        """Return binary fraud labels using the given decision threshold."""
         proba = self.predict_proba(X)[:, 1]
         return (proba >= threshold).astype(int)
 
@@ -183,6 +185,7 @@ class FraudEnsemble:
     # ------------------------------------------------------------------
 
     def save(self, path: Union[str, Path, None] = None) -> Path:
+        """Serialise the fitted ensemble to disk using joblib."""
         path = Path(path) if path else ARTIFACT_DIR / "fraud_ensemble.joblib"
         joblib.dump(self, path)
         logger.info("FraudEnsemble saved → {}", path)
@@ -190,6 +193,7 @@ class FraudEnsemble:
 
     @classmethod
     def load(cls, path: Union[str, Path, None] = None) -> "FraudEnsemble":
+        """Deserialise a FraudEnsemble from a joblib file."""
         path = Path(path) if path else ARTIFACT_DIR / "fraud_ensemble.joblib"
         obj = joblib.load(path)
         logger.info("FraudEnsemble loaded ← {}", path)
