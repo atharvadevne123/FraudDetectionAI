@@ -80,6 +80,7 @@ class TransactionFeatureEngineer:
     # ------------------------------------------------------------------
 
     def _amount_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Compute z-score, log, round-flag, and percentile threshold features for amount."""
         stats = self._global_stats.get("amount", {"mean": 1, "std": 1, "p95": 1, "p99": 1})
         df["amount_zscore"] = (df["amount"] - stats["mean"]) / stats["std"]
         df["amount_log"] = np.log1p(df["amount"])
@@ -93,6 +94,7 @@ class TransactionFeatureEngineer:
         return df
 
     def _temporal_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Extract hour, day-of-week, weekend, night, and business-hours flags from timestamp."""
         if "timestamp" not in df.columns:
             return df
         ts = pd.to_datetime(df["timestamp"])
@@ -145,7 +147,7 @@ class TransactionFeatureEngineer:
         return df
 
     def _geo_features(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Flag impossible velocity (same user, different country in short time)."""
+        """Add multi_country_session flag when a user appears in more than one country."""
         if "country" not in df.columns or "user_id" not in df.columns:
             return df
         user_countries = df.groupby("user_id")["country"].transform("nunique")
@@ -153,6 +155,7 @@ class TransactionFeatureEngineer:
         return df
 
     def _device_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Count unique device fingerprints per user and flag accounts with >3 devices."""
         if "device_fingerprint" not in df.columns or "user_id" not in df.columns:
             return df
         user_devices = df.groupby("user_id")["device_fingerprint"].transform("nunique")
