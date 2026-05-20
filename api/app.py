@@ -426,6 +426,27 @@ class Feedback(Resource):
         return {"status": "logged", "request_id": record["request_id"]}, 200
 
 
+@ns.route("/version")
+class Version(Resource):
+    def get(self):
+        """Return API version and runtime metadata."""
+        import sys as _sys
+        return {
+            "version": "1.0.0",
+            "api": "Fraud Detection API",
+            "python_version": _sys.version.split()[0],
+        }, 200
+
+
+@ns.route("/readiness")
+class Readiness(Resource):
+    def get(self):
+        """Return readiness state — 200 when models are loaded, 503 otherwise."""
+        ready = _ensemble is not None
+        code = 200 if ready else 503
+        return {"ready": ready, "models_loaded": ready}, code
+
+
 # ─── Entry point ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
