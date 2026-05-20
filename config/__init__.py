@@ -1,13 +1,13 @@
 """Configuration constants for the fraud detection system."""
 
 from config.constants import (
-    RISK_TIERS,
+    API_VERSION,
     DEFAULT_CONTAMINATION,
     DEFAULT_N_ESTIMATORS,
-    SMOTE_TARGET_RATIO,
-    FEATURE_COUNT,
     ENSEMBLE_WEIGHTS,
-    API_VERSION,
+    FEATURE_COUNT,
+    RISK_TIERS,
+    SMOTE_TARGET_RATIO,
 )
 
 __all__ = [

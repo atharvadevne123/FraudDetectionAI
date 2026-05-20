@@ -6,28 +6,27 @@ SHAP values computed per-prediction for local explainability.
 
 from __future__ import annotations
 
-import numpy as np
-import pandas as pd
-import joblib
-import shap
 from pathlib import Path
-from loguru import logger
 from typing import Optional, Union
 
-from sklearn.ensemble import RandomForestClassifier, VotingClassifier
-from sklearn.calibration import CalibratedClassifierCV
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import (
-    roc_auc_score,
-    average_precision_score,
-)
-from sklearn.preprocessing import StandardScaler
-from imblearn.over_sampling import SMOTE
-import xgboost as xgb
+import joblib
 import lightgbm as lgb
 import mlflow
 import mlflow.sklearn
-
+import numpy as np
+import pandas as pd
+import shap
+import xgboost as xgb
+from imblearn.over_sampling import SMOTE
+from loguru import logger
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.ensemble import RandomForestClassifier, VotingClassifier
+from sklearn.metrics import (
+    average_precision_score,
+    roc_auc_score,
+)
+from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import StandardScaler
 
 ARTIFACT_DIR = Path(__file__).parent / "artifacts"
 ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)

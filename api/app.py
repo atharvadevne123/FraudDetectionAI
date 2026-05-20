@@ -16,7 +16,7 @@ import os
 import time
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 from flask import Flask, g, jsonify, request
@@ -25,7 +25,9 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_restx import Api, Resource, fields
 from loguru import logger
-from marshmallow import Schema, ValidationError, fields as ma_fields, validate as ma_validate
+from marshmallow import Schema, ValidationError
+from marshmallow import fields as ma_fields
+from marshmallow import validate as ma_validate
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 # ─── App bootstrap ────────────────────────────────────────────────────────────
@@ -92,6 +94,7 @@ def _load_models() -> None:
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
     import joblib
+
     from models.anomaly.anomaly_detector import AnomalyDetector
     from models.ensemble.fraud_classifier import FraudEnsemble
     from models.rag.rag_explainer import RAGExplainer

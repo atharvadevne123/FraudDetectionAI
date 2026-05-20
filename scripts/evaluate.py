@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 from argparse import Namespace
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -17,10 +17,15 @@ from loguru import logger
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
-from models.ensemble.fraud_classifier import FraudEnsemble
 from models.anomaly.anomaly_detector import AnomalyDetector
+from models.ensemble.fraud_classifier import FraudEnsemble
 from pipeline.feature_engineering import TransactionFeatureEngineer
-from utils.metrics import precision_at_k, average_precision, detection_rate, false_positive_rate
+from utils.metrics import (
+    average_precision,
+    detection_rate,
+    false_positive_rate,
+    precision_at_k,
+)
 
 
 def parse_args() -> Namespace:

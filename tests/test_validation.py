@@ -1,9 +1,7 @@
 """Tests for utils.validation."""
 from __future__ import annotations
 
-import pytest
 from utils.validation import validate_transaction_payload
-
 
 VALID_PAYLOAD = {
     "user_id": 1,

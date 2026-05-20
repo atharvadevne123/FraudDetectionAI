@@ -13,12 +13,11 @@ import re
 from pathlib import Path
 from typing import Optional, Union
 
+import anthropic
 import faiss
 import numpy as np
 from loguru import logger
 from sentence_transformers import SentenceTransformer
-import anthropic
-
 
 ARTIFACT_DIR = Path(__file__).parent / "artifacts"
 ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)

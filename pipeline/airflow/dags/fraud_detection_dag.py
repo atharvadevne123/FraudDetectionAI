@@ -22,7 +22,6 @@ from airflow.decorators import task
 from airflow.utils.dates import days_ago
 from loguru import logger
 
-
 # ---------------------------------------------------------------------------
 # DAG defaults
 # ---------------------------------------------------------------------------
@@ -93,8 +92,9 @@ with DAG(
         """Load or fit the TransactionFeatureEngineer and produce enriched feature parquet."""
         import sys
         sys.path.insert(0, "/opt/airflow")
-        from pipeline.feature_engineering import TransactionFeatureEngineer
         import joblib
+
+        from pipeline.feature_engineering import TransactionFeatureEngineer
 
         df = pd.read_parquet(raw_path)
         fe_path = "/opt/airflow/models/feature_engineer.joblib"
@@ -190,8 +190,8 @@ with DAG(
     def rag_explanation(scored_path: str) -> str:
         import sys
         sys.path.insert(0, "/opt/airflow")
-        from models.rag.rag_explainer import RAGExplainer
         from models.ensemble.fraud_classifier import FraudEnsemble
+        from models.rag.rag_explainer import RAGExplainer
 
         df = pd.read_parquet(scored_path)
         flagged = df[df["fraud_score"] >= 0.5].copy()

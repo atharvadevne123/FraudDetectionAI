@@ -18,10 +18,10 @@ from sklearn.model_selection import train_test_split
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from pipeline.feature_engineering import TransactionFeatureEngineer
 from models.anomaly.anomaly_detector import AnomalyDetector
 from models.ensemble.fraud_classifier import FraudEnsemble
 from monitoring.drift_monitor import DriftMonitor
+from pipeline.feature_engineering import TransactionFeatureEngineer
 
 
 def parse_args() -> Namespace:

@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 from argparse import Namespace
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -17,7 +17,7 @@ from loguru import logger
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
-from config.constants import RISK_TIERS, MAX_BATCH_SIZE
+from config.constants import MAX_BATCH_SIZE, RISK_TIERS
 
 
 def parse_args() -> Namespace:

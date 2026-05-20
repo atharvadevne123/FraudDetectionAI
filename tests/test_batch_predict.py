@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pytest
+
 from scripts.batch_predict import assign_risk_tier
 
 

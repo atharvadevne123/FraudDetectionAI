@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pytest
+
 from config.constants import (
     API_VERSION,
     DEFAULT_CONTAMINATION,

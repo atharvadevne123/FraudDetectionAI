@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from api.app import app, _load_models
+from api.app import _load_models, app
 
 _load_models()
 

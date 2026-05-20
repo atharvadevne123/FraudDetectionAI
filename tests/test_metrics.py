@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+
 from utils.metrics import (
     average_precision,
     detection_rate,

@@ -9,18 +9,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-import numpy as np
 import pandas as pd
 from evidently import ColumnMapping
 from evidently.metrics import (
     DataDriftTable,
     DatasetDriftMetric,
     DatasetMissingValuesMetric,
-    ClassificationQualityMetric,
 )
 from evidently.report import Report
 from loguru import logger
-
 
 MONITOR_DIR = Path(__file__).parent / "reports"
 MONITOR_DIR.mkdir(parents=True, exist_ok=True)

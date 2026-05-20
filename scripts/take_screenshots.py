@@ -3,12 +3,13 @@ Automated screenshot capture for README documentation.
 Takes dashboard screenshots (all tiers + scorer results) and API response snapshots.
 """
 
-import json
-import time
 import http.server
-import threading
+import json
 import os
+import threading
+import time
 from pathlib import Path
+
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).parent.parent
@@ -114,7 +115,8 @@ def save_api_json(name: str, data: dict):
 
 def capture_api_screenshots(page):
     """Hit every API endpoint and save JSON + take a terminal-style visual screenshot."""
-    import urllib.request, urllib.error
+    import urllib.error
+    import urllib.request
 
     def get(url):
         try:
@@ -184,15 +186,6 @@ def build_terminal_html(tier, payload, result, clr):
     as_ = result.get("anomaly_score", 0)
     rt = result.get("risk_tier", tier)
     lat = result.get("latency_ms", 0)
-    req_json = json.dumps(payload, indent=4)
-    res_json = json.dumps({
-        "transaction_id": result.get("transaction_id", payload.get("transaction_id")),
-        "fraud_score": fs,
-        "anomaly_score": as_,
-        "fraud_label": result.get("fraud_label", 0),
-        "risk_tier": rt,
-        "latency_ms": lat,
-    }, indent=4)
     return f"""<!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>
 *{{margin:0;padding:0;box-sizing:border-box;}}

@@ -6,18 +6,17 @@ Anomaly scores feed into the ensemble as additional features.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Union
 
 import joblib
 import numpy as np
 import pandas as pd
 from loguru import logger
-from pathlib import Path
 from pyod.models.iforest import IForest
 from pyod.models.lof import LOF
 from pyod.models.ocsvm import OCSVM
 from sklearn.preprocessing import StandardScaler
-
 
 ARTIFACT_DIR = Path(__file__).parent / "artifacts"
 ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
