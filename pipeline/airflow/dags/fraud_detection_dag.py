@@ -13,6 +13,7 @@ import json
 import os
 from datetime import timedelta
 from pathlib import Path
+from typing import Any
 
 import boto3
 import pandas as pd
@@ -65,7 +66,7 @@ with DAG(
     # -----------------------------------------------------------------------
 
     @task(task_id="ingest_transactions")
-    def ingest_transactions(**context) -> str:
+    def ingest_transactions(**context: Any) -> str:
         """Pull the latest transaction batch from S3 into /tmp."""
         s3 = boto3.client("s3")
         execution_date = context["execution_date"].strftime("%Y%m%d_%H%M")
@@ -233,7 +234,7 @@ with DAG(
     # -----------------------------------------------------------------------
 
     @task(task_id="store_results")
-    def store_results(explained_path: str, **context) -> None:
+    def store_results(explained_path: str, **context: Any) -> None:
         s3 = boto3.client("s3")
         execution_date = context["execution_date"].strftime("%Y%m%d_%H%M")
         key = f"{S3_RESULTS_PREFIX}results_{execution_date}.parquet"
