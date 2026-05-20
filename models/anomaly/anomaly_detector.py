@@ -6,15 +6,17 @@ Anomaly scores feed into the ensemble as additional features.
 
 from __future__ import annotations
 
+from typing import Union
+
+import joblib
 import numpy as np
 import pandas as pd
-import joblib
-from pathlib import Path
 from loguru import logger
-from sklearn.preprocessing import StandardScaler
+from pathlib import Path
 from pyod.models.iforest import IForest
 from pyod.models.lof import LOF
 from pyod.models.ocsvm import OCSVM
+from sklearn.preprocessing import StandardScaler
 
 
 ARTIFACT_DIR = Path(__file__).parent / "artifacts"
@@ -57,7 +59,7 @@ class AnomalyDetector:
     # Training
     # ------------------------------------------------------------------
 
-    def fit(self, X) -> "AnomalyDetector":
+    def fit(self, X: Union[pd.DataFrame, np.ndarray]) -> "AnomalyDetector":
         X_arr = self._to_array(X)
         X_scaled = self.scaler.fit_transform(X_arr)
         logger.info("Fitting anomaly detectors on {} samples × {} features.", *X_scaled.shape)
@@ -78,7 +80,7 @@ class AnomalyDetector:
     # Inference
     # ------------------------------------------------------------------
 
-    def score(self, X) -> np.ndarray:
+    def score(self, X: Union[pd.DataFrame, np.ndarray]) -> np.ndarray:
         """Return composite anomaly score per sample, range [0, 1]."""
         self._check_fitted()
         X_scaled = self.scaler.transform(self._to_array(X))
@@ -95,13 +97,13 @@ class AnomalyDetector:
         composite = 0.5 * s_if + 0.3 * s_lof + 0.2 * s_ocsvm
         return np.clip(composite, 0.0, 1.0)
 
-    def predict(self, X) -> np.ndarray:
+    def predict(self, X: Union[pd.DataFrame, np.ndarray]) -> np.ndarray:
         """Return binary labels: 1 = anomaly, 0 = normal."""
         scores = self.score(X)
         threshold = 1 - self.contamination
         return (scores >= threshold).astype(int)
 
-    def score_and_predict(self, X) -> pd.DataFrame:
+    def score_and_predict(self, X: Union[pd.DataFrame, np.ndarray]) -> pd.DataFrame:
         X_arr = self._to_array(X)
         scores = self.score(X_arr)
         labels = (scores >= (1 - self.contamination)).astype(int)
@@ -111,14 +113,14 @@ class AnomalyDetector:
     # Persistence
     # ------------------------------------------------------------------
 
-    def save(self, path=None) -> Path:
+    def save(self, path: Union[str, Path, None] = None) -> Path:
         path = Path(path) if path else ARTIFACT_DIR / "anomaly_detector.joblib"
         joblib.dump(self, path)
         logger.info("AnomalyDetector saved → {}", path)
         return path
 
     @classmethod
-    def load(cls, path=None) -> "AnomalyDetector":
+    def load(cls, path: Union[str, Path, None] = None) -> "AnomalyDetector":
         path = Path(path) if path else ARTIFACT_DIR / "anomaly_detector.joblib"
         obj = joblib.load(path)
         logger.info("AnomalyDetector loaded ← {}", path)
@@ -129,7 +131,7 @@ class AnomalyDetector:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _minmax(scores: np.ndarray) -> dict:
+    def _minmax(scores: np.ndarray) -> dict[str, float]:
         return {"s_min": float(scores.min()), "s_max": float(scores.max())}
 
     @staticmethod
@@ -139,9 +141,9 @@ class AnomalyDetector:
         return (scores - s_min) / (s_max - s_min)
 
     @staticmethod
-    def _to_array(X) -> np.ndarray:
+    def _to_array(X: Union[pd.DataFrame, np.ndarray]) -> np.ndarray:
         return X.values if isinstance(X, pd.DataFrame) else np.asarray(X)
 
-    def _check_fitted(self):
+    def _check_fitted(self) -> None:
         if not self._fitted:
             raise RuntimeError("Fit the AnomalyDetector before calling score/predict.")
