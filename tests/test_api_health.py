@@ -1,8 +1,6 @@
 """Tests for /health endpoint and API structural guarantees."""
 from __future__ import annotations
 
-import pytest
-
 
 class TestHealthEndpoint:
     def test_health_returns_200(self, client):

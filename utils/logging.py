@@ -7,7 +7,6 @@ from pathlib import Path
 
 from loguru import logger
 
-
 LOG_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
     "<level>{level: <8}</level> | "

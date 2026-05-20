@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
+
 from scripts.check_data_quality import (
     REQUIRED_COLS,
     check_duplicate_rows,

@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 from argparse import Namespace
+from pathlib import Path
 
 import pandas as pd
 from loguru import logger

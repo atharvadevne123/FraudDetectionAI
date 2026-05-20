@@ -1,12 +1,6 @@
 """Tests for utils.logging."""
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-from unittest.mock import patch
-
-import pytest
-
 
 class TestConfigureLogging:
     def test_configure_stdout_only(self, tmp_path):
