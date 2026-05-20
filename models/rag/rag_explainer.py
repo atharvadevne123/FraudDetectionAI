@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import faiss
 import numpy as np
@@ -94,7 +94,7 @@ class RAGExplainer:
         self._index.add(embeddings.astype(np.float32))
         logger.success("FAISS index built: {} chunks, {} dimensions.", len(chunks), dim)
 
-    def save_index(self, path=None) -> Path:
+    def save_index(self, path: Optional[Union[str, Path]] = None) -> Path:
         path = Path(path) if path else ARTIFACT_DIR / "faiss.index"
         if self._index:
             faiss.write_index(self._index, str(path))
@@ -103,7 +103,7 @@ class RAGExplainer:
             logger.info("FAISS index saved → {}", path)
         return path
 
-    def load_index(self, path=None) -> "RAGExplainer":
+    def load_index(self, path: Optional[Union[str, Path]] = None) -> "RAGExplainer":
         path = Path(path) if path else ARTIFACT_DIR / "faiss.index"
         self._index = faiss.read_index(str(path))
         chunk_path = path.with_suffix(".chunks.json")
@@ -187,7 +187,7 @@ Please explain why this transaction was flagged."""
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _build_query(transaction: dict, fraud_score: float, shap: dict) -> str:
+    def _build_query(transaction: dict[str, object], fraud_score: float, shap: dict[str, float]) -> str:
         top = sorted(shap.items(), key=lambda x: abs(x[1]), reverse=True)[:3]
         feature_str = ", ".join(f[0].replace("_", " ") for f, _ in top)
         amount = transaction.get("amount", "unknown")
