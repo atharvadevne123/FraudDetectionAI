@@ -5,6 +5,8 @@ Generates behavioral, velocity, and statistical features from raw transaction st
 
 from __future__ import annotations
 
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 from loguru import logger
@@ -19,7 +21,7 @@ class TransactionFeatureEngineer:
     CATEGORICAL_COLS = ["merchant_category", "payment_method", "device_type", "channel"]
     NUMERIC_COLS = ["amount", "account_age_days", "credit_utilization", "prior_fraud_count"]
 
-    def __init__(self, velocity_windows: list = None):
+    def __init__(self, velocity_windows: Optional[list[int]] = None):
         self.velocity_windows = velocity_windows if velocity_windows is not None else [1, 7, 30]
         self._fitted = False
         self._category_maps = {}
