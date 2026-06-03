@@ -41,7 +41,8 @@ def assign_risk_tier(score: float) -> str:
     return "CLEAN"
 
 
-def load_artifacts(args: Namespace):
+def load_artifacts(args: Namespace) -> tuple:
+    """Load feature engineer, ensemble, and anomaly detector from the paths in args."""
     import joblib
 
     fe = joblib.load(args.feature_engineer)
@@ -51,6 +52,7 @@ def load_artifacts(args: Namespace):
 
 
 def score_chunk(chunk: pd.DataFrame, fe, ensemble, anomaly) -> pd.DataFrame:
+    """Apply feature engineering and model scoring to a single chunk of transactions."""
     df_feat = fe.transform(chunk)
     feature_cols = [c for c in df_feat.columns if c not in ("is_fraud", "user_id", "timestamp")]
     X = df_feat[feature_cols].fillna(0).values
@@ -65,6 +67,7 @@ def score_chunk(chunk: pd.DataFrame, fe, ensemble, anomaly) -> pd.DataFrame:
 
 
 def main() -> None:
+    """Read input file, score all transactions in chunks, and write results to CSV."""
     args = parse_args()
     input_path = Path(args.input)
 
