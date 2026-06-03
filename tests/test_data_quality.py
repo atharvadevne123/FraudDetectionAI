@@ -91,3 +91,39 @@ class TestDuplicateRows:
         issues = check_duplicate_rows(df_dup)
         assert len(issues) == 1
         assert "1 duplicate" in issues[0]
+
+
+class TestDataQualityParametrized:
+    @pytest.mark.parametrize(
+        "col,bad_value",
+        [
+            ("amount", -1.0),
+            ("credit_utilization", 1.5),
+            ("account_age_days", -5),
+        ],
+    )
+    def test_out_of_range_flagged(self, valid_df, col, bad_value):
+        from scripts.check_data_quality import check_numeric_bounds
+
+        df = valid_df.copy()
+        if col in df.columns:
+            df.loc[0, col] = bad_value
+            issues = check_numeric_bounds(df)
+            assert any(col in i for i in issues)
+
+    @pytest.mark.parametrize("threshold", [0.0, 0.05, 0.5])
+    def test_zero_missing_always_passes_threshold(self, valid_df, threshold):
+        from scripts.check_data_quality import check_missing_values
+
+        issues = check_missing_values(valid_df, threshold)
+        assert issues == []
+
+    @pytest.mark.parametrize("n_dupes", [1, 3, 10])
+    def test_n_duplicates_flagged_correctly(self, valid_df, n_dupes):
+        from scripts.check_data_quality import check_duplicate_rows
+
+        extras = pd.concat([valid_df.iloc[[0]]] * n_dupes, ignore_index=True)
+        df = pd.concat([valid_df, extras], ignore_index=True)
+        issues = check_duplicate_rows(df)
+        assert len(issues) == 1
+        assert str(n_dupes) in issues[0]
