@@ -130,3 +130,51 @@ class TestCategoryFreqCache:
         _ = fitted_fe._get_category_freq("merchant_category", "retail")
         cache_info = fitted_fe._get_category_freq.cache_info()
         assert cache_info.currsize > 0
+
+
+class TestFeatureEngineeringExtendedParametrized:
+    @pytest.mark.parametrize(
+        "col",
+        ["merchant_category_freq", "payment_method_freq", "device_type_freq", "channel_freq"],
+    )
+    def test_all_categorical_freq_encoded(self, fitted_fe, sample_df, col):
+        result = fitted_fe.transform(sample_df)
+        assert col in result.columns
+
+    @pytest.mark.parametrize(
+        "temporal_col",
+        ["hour_of_day", "day_of_week", "is_weekend", "is_night", "is_business_hours"],
+    )
+    def test_temporal_cols_present(self, fitted_fe, sample_df, temporal_col):
+        result = fitted_fe.transform(sample_df)
+        assert temporal_col in result.columns
+
+    @pytest.mark.parametrize("n", [1, 5, 20])
+    def test_fit_transform_consistent_with_fit_then_transform(self, n):
+        from pipeline.feature_engineering import TransactionFeatureEngineer
+
+        df = __import__("tests.conftest", fromlist=["sample_df"])
+        # use sample_df fixture data directly by reading the full file
+        import sys, os
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        import numpy as _np
+        _rng = _np.random.default_rng(n)
+        import pandas as _pd
+        _df = _pd.DataFrame({
+            "user_id": _rng.integers(1, 100, 50),
+            "amount": _rng.exponential(200, 50),
+            "merchant_category": _rng.choice(["retail", "grocery"], 50),
+            "payment_method": _rng.choice(["credit", "debit"], 50),
+            "device_type": _rng.choice(["mobile", "desktop"], 50),
+            "channel": _rng.choice(["online", "pos"], 50),
+            "timestamp": _pd.date_range("2024-01-01", periods=50, freq="1h"),
+            "account_age_days": _rng.integers(1, 3650, 50),
+            "credit_utilization": _rng.uniform(0, 1, 50),
+            "prior_fraud_count": _rng.integers(0, 3, 50),
+        })
+        fe1 = TransactionFeatureEngineer()
+        out1 = fe1.fit_transform(_df)
+        fe2 = TransactionFeatureEngineer()
+        fe2.fit(_df)
+        out2 = fe2.transform(_df)
+        assert list(out1.columns) == list(out2.columns)
