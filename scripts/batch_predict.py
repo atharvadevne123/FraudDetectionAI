@@ -27,8 +27,9 @@ def parse_args() -> Namespace:
     p.add_argument("--ensemble", default="models/fraud_ensemble.joblib")
     p.add_argument("--anomaly", default="models/anomaly_detector.joblib")
     p.add_argument("--feature-engineer", default="models/feature_engineer.joblib")
-    p.add_argument("--chunk-size", type=int, default=MAX_BATCH_SIZE,
-                   help="Process this many rows at a time")
+    p.add_argument(
+        "--chunk-size", type=int, default=MAX_BATCH_SIZE, help="Process this many rows at a time"
+    )
     return p.parse_args()
 
 
@@ -42,6 +43,7 @@ def assign_risk_tier(score: float) -> str:
 
 def load_artifacts(args: Namespace):
     import joblib
+
     fe = joblib.load(args.feature_engineer)
     ensemble = joblib.load(args.ensemble)
     anomaly = joblib.load(args.anomaly)
@@ -50,8 +52,7 @@ def load_artifacts(args: Namespace):
 
 def score_chunk(chunk: pd.DataFrame, fe, ensemble, anomaly) -> pd.DataFrame:
     df_feat = fe.transform(chunk)
-    feature_cols = [c for c in df_feat.columns
-                    if c not in ("is_fraud", "user_id", "timestamp")]
+    feature_cols = [c for c in df_feat.columns if c not in ("is_fraud", "user_id", "timestamp")]
     X = df_feat[feature_cols].fillna(0).values
     anomaly_scores = anomaly.score(X)
     X_full = np.column_stack([X, anomaly_scores])
@@ -84,7 +85,7 @@ def main() -> None:
 
     chunks = []
     for start in range(0, len(df), args.chunk_size):
-        chunk = df.iloc[start: start + args.chunk_size]
+        chunk = df.iloc[start : start + args.chunk_size]
         scored = score_chunk(chunk, fe, ensemble, anomaly)
         chunks.append(scored)
         logger.info("Scored rows {}-{}", start, min(start + args.chunk_size, len(df)))
