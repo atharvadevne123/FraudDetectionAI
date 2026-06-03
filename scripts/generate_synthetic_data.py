@@ -22,8 +22,12 @@ def parse_args() -> Namespace:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     p.add_argument("--rows", type=int, default=100_000, help="Number of transactions to generate")
-    p.add_argument("--out", type=str, default="data/raw/transactions.parquet",
-                   help="Output file path (.parquet or .csv)")
+    p.add_argument(
+        "--out",
+        type=str,
+        default="data/raw/transactions.parquet",
+        help="Output file path (.parquet or .csv)",
+    )
     p.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
     return p.parse_args()
 
