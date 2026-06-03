@@ -11,7 +11,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 @pytest.fixture(scope="session")
 def app():
+    """Return a Flask test application with rate limiting disabled."""
     from api.app import app as flask_app
+
     flask_app.config["TESTING"] = True
     flask_app.config["RATELIMIT_ENABLED"] = False
     return flask_app
@@ -19,11 +21,14 @@ def app():
 
 @pytest.fixture()
 def client(app):
+    """Return a test client for the Flask application."""
     return app.test_client()
 
 
 @pytest.fixture()
 def mock_ensemble():
+    """Return a lightweight mock FraudEnsemble that always returns 0.85 fraud probability."""
+
     class _MockEnsemble:
         _shap_explainer = None
         _fitted = True
@@ -44,6 +49,8 @@ def mock_ensemble():
 
 @pytest.fixture()
 def mock_anomaly_detector():
+    """Return a lightweight mock AnomalyDetector that always returns 0.72 anomaly score."""
+
     class _MockAnomalyDetector:
         _fitted = True
         contamination = 0.02
@@ -60,6 +67,7 @@ def mock_anomaly_detector():
 
 @pytest.fixture()
 def patch_models(monkeypatch, mock_ensemble, mock_anomaly_detector):
+    """Monkeypatch the global model objects in api.app with lightweight mocks."""
     import api.app as app_module
     monkeypatch.setattr(app_module, "_ensemble", mock_ensemble)
     monkeypatch.setattr(app_module, "_anomaly_detector", mock_anomaly_detector)
