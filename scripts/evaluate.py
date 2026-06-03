@@ -17,10 +17,10 @@ from loguru import logger
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
-from models.anomaly.anomaly_detector import AnomalyDetector
-from models.ensemble.fraud_classifier import FraudEnsemble
-from pipeline.feature_engineering import TransactionFeatureEngineer
-from utils.metrics import (
+from models.anomaly.anomaly_detector import AnomalyDetector  # noqa: E402
+from models.ensemble.fraud_classifier import FraudEnsemble  # noqa: E402
+from pipeline.feature_engineering import TransactionFeatureEngineer  # noqa: E402
+from utils.metrics import (  # noqa: E402
     average_precision,
     detection_rate,
     false_positive_rate,
