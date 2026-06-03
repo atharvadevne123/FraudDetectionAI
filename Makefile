@@ -1,5 +1,6 @@
 .PHONY: install install-dev test test-cov lint lint-fix type-check \
-        run train evaluate docker-build docker-up clean check-data
+        run train evaluate docker-build docker-up clean check-data \
+        format format-check security generate-data
 
 install:
 	pip install -r requirements.txt
@@ -43,6 +44,18 @@ docker-build:
 
 docker-up:
 	docker compose up --build
+
+format:
+	ruff format .
+
+format-check:
+	ruff format --check .
+
+security:
+	pip install bandit -q && bandit -r api/ models/ pipeline/ utils/ -ll --exit-zero
+
+generate-data:
+	python scripts/generate_synthetic_data.py --rows 50000 --out data/raw/transactions.parquet
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
