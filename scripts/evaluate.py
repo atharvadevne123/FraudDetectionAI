@@ -59,12 +59,16 @@ def main() -> None:
     y_true = df["is_fraud"].values
 
     logger.info("Loading artifacts…")
-    fe: TransactionFeatureEngineer = TransactionFeatureEngineer.load(args.feature_engineer) \
-        if hasattr(TransactionFeatureEngineer, "load") else TransactionFeatureEngineer()
+    fe: TransactionFeatureEngineer = (
+        TransactionFeatureEngineer.load(args.feature_engineer)
+        if hasattr(TransactionFeatureEngineer, "load")
+        else TransactionFeatureEngineer()
+    )
 
     fe_path = Path(args.feature_engineer)
     if fe_path.exists():
         import joblib
+
         fe = joblib.load(fe_path)
     else:
         logger.warning("Feature engineer artifact not found; using unfitted instance.")
