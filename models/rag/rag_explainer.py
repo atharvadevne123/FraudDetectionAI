@@ -62,7 +62,9 @@ class RAGExplainer:
         """Load policy documents, chunk them, embed, and build FAISS index."""
         policy_files = list(POLICY_DIR.glob("*.txt")) + list(POLICY_DIR.glob("*.md"))
         if not policy_files:
-            logger.warning("No policy documents found in {}. RAG context will be empty.", POLICY_DIR)
+            logger.warning(
+                "No policy documents found in {}. RAG context will be empty.", POLICY_DIR
+            )
             return
 
         raw_text = []
@@ -87,7 +89,9 @@ class RAGExplainer:
             chunks.append(" ".join(buf))
 
         self._chunks = chunks
-        embeddings = self.embed_model.encode(chunks, normalize_embeddings=True, show_progress_bar=False)
+        embeddings = self.embed_model.encode(
+            chunks, normalize_embeddings=True, show_progress_bar=False
+        )
         dim = embeddings.shape[1]
         self._index = faiss.IndexFlatIP(dim)
         self._index.add(embeddings.astype(np.float32))
@@ -186,7 +190,9 @@ Please explain why this transaction was flagged."""
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _build_query(transaction: dict[str, object], fraud_score: float, shap: dict[str, float]) -> str:
+    def _build_query(
+        transaction: dict[str, object], fraud_score: float, shap: dict[str, float]
+    ) -> str:
         top = sorted(shap.items(), key=lambda x: abs(x[1]), reverse=True)[:3]
         feature_str = ", ".join(f[0].replace("_", " ") for f, _ in top)
         amount = transaction.get("amount", "unknown")
