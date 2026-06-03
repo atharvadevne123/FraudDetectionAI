@@ -22,7 +22,13 @@ class TransactionFeatureEngineer:
     CATEGORICAL_COLS = ["merchant_category", "payment_method", "device_type", "channel"]
     NUMERIC_COLS = ["amount", "account_age_days", "credit_utilization", "prior_fraud_count"]
 
-    def __init__(self, velocity_windows: Optional[list[int]] = None):
+    def __init__(self, velocity_windows: Optional[list[int]] = None) -> None:
+        """Initialise the feature engineer with configurable velocity rolling windows.
+
+        Args:
+            velocity_windows: Day offsets for rolling-window transaction count/amount features.
+                Defaults to [1, 7, 30].
+        """
         self.velocity_windows = velocity_windows if velocity_windows is not None else [1, 7, 30]
         self._fitted = False
         self._category_maps = {}
