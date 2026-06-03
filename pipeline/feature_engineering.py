@@ -141,6 +141,7 @@ class TransactionFeatureEngineer:
         return df
 
     def _behavioral_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add unique-merchant count, unique-IP count, and repeat-fraudster flag per user."""
         if "user_id" not in df.columns:
             return df
         if "merchant_id" in df.columns:
