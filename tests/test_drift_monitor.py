@@ -82,3 +82,24 @@ class TestDriftMonitorThresholds:
             m = DriftMonitor(drift_threshold=0.25, score_shift_threshold=0.10)
         assert m.drift_threshold == 0.25
         assert m.score_shift_threshold == 0.10
+
+
+class TestDriftMonitorCheckMissing:
+    @pytest.mark.parametrize(
+        "n_missing,expected_gt",
+        [(0, 0.0), (10, 0.0), (50, 0.0)],
+    )
+    def test_check_missing_ratio(self, monitor, sample_df, n_missing, expected_gt):
+        df = sample_df.copy()
+        df.loc[: n_missing - 1, "amount"] = float("nan")
+        ratio = monitor._check_missing(df)
+        assert 0.0 <= ratio <= 1.0
+
+    def test_check_missing_empty_df(self, monitor):
+        empty = pd.DataFrame()
+        assert monitor._check_missing(empty) == 0.0
+
+    def test_check_score_shift_no_column(self, monitor, sample_df):
+        monitor.set_reference(sample_df)
+        df_no_score = sample_df.drop(columns=["fraud_score"])
+        assert monitor._check_score_shift(df_no_score) == 0.0
