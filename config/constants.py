@@ -7,10 +7,10 @@ API_VERSION = "1.0.0"
 # Risk scoring thresholds
 RISK_TIERS: dict[str, tuple[float, float]] = {
     "CRITICAL": (0.90, 1.01),
-    "HIGH":     (0.70, 0.90),
-    "MEDIUM":   (0.50, 0.70),
-    "LOW":      (0.30, 0.50),
-    "CLEAN":    (0.00, 0.30),
+    "HIGH": (0.70, 0.90),
+    "MEDIUM": (0.50, 0.70),
+    "LOW": (0.30, 0.50),
+    "CLEAN": (0.00, 0.30),
 }
 
 # Anomaly detector defaults
