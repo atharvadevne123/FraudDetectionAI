@@ -33,6 +33,7 @@ def parse_args() -> Namespace:
 
 
 def main() -> None:
+    """Generate a synthetic labelled transaction dataset and write it to disk."""
     args = parse_args()
     df = generate_synthetic_data(args.rows)
     out = Path(args.out)
