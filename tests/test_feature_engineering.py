@@ -125,3 +125,31 @@ class TestEdgeCases:
         fe.fit(sample_df)
         result = fe.transform(sample_df.iloc[:1].copy())
         assert len(result) == 1
+
+
+class TestFeatureEngineeringParametrized:
+    @pytest.mark.parametrize("velocity_windows", [[1], [7, 30], [1, 7, 30]])
+    def test_velocity_windows_config(self, velocity_windows, sample_df):
+        fe = TransactionFeatureEngineer(velocity_windows=velocity_windows)
+        fe.fit(sample_df)
+        result = fe.transform(sample_df)
+        for w in velocity_windows:
+            assert f"txn_count_{w}d" in result.columns
+
+    @pytest.mark.parametrize(
+        "col",
+        ["amount_zscore", "amount_log", "amount_is_round", "amount_above_p95"],
+    )
+    def test_amount_features_present(self, col, sample_df):
+        fe = TransactionFeatureEngineer()
+        fe.fit(sample_df)
+        result = fe.transform(sample_df)
+        assert col in result.columns
+
+    @pytest.mark.parametrize("n_rows", [1, 5, 100])
+    def test_transform_preserves_row_count(self, n_rows, sample_df):
+        fe = TransactionFeatureEngineer()
+        fe.fit(sample_df)
+        subset = sample_df.iloc[:n_rows].copy()
+        out = fe.transform(subset)
+        assert len(out) == n_rows
