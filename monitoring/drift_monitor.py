@@ -143,7 +143,15 @@ class DriftMonitor:
             return self._fallback_drift_check(current, numeric_cols)
 
     def _fallback_drift_check(self, current: pd.DataFrame, cols: list[str]) -> dict[str, Any]:
-        """KS-based drift check when Evidently fails."""
+        """KS-based drift check when Evidently fails.
+
+        Args:
+            current: Current batch DataFrame to compare against reference.
+            cols: Numeric column names to test for drift.
+
+        Returns:
+            Dict with dataset_drift flag and list of drifted feature names.
+        """
         from scipy import stats
 
         drifted = []
