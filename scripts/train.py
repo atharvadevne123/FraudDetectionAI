@@ -72,6 +72,7 @@ def generate_synthetic_data(n: int = 50_000) -> pd.DataFrame:
 
 
 def main() -> None:
+    """Run end-to-end training: load data, engineer features, fit models, save artifacts."""
     args = parse_args()
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
