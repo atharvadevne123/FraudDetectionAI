@@ -39,6 +39,7 @@ def parse_args() -> Namespace:
 
 
 def load_data(path: str) -> pd.DataFrame:
+    """Read a CSV or Parquet file into a DataFrame based on file extension."""
     p = Path(path)
     if p.suffix == ".parquet":
         return pd.read_parquet(p)
@@ -46,6 +47,7 @@ def load_data(path: str) -> pd.DataFrame:
 
 
 def check_required_columns(df: pd.DataFrame) -> list[str]:
+    """Return error strings for any required columns absent from the DataFrame."""
     missing = [c for c in REQUIRED_COLS if c not in df.columns]
     if missing:
         return [f"Missing required columns: {missing}"]
@@ -53,6 +55,7 @@ def check_required_columns(df: pd.DataFrame) -> list[str]:
 
 
 def check_missing_values(df: pd.DataFrame, threshold: float) -> list[str]:
+    """Return error strings for columns whose missing-value ratio exceeds threshold."""
     issues = []
     for col in df.columns:
         ratio = df[col].isnull().mean()
@@ -64,6 +67,7 @@ def check_missing_values(df: pd.DataFrame, threshold: float) -> list[str]:
 
 
 def check_numeric_bounds(df: pd.DataFrame) -> list[str]:
+    """Return error strings for numeric columns with values outside their allowed range."""
     issues = []
     for col, (lo, hi) in NUMERIC_BOUNDS.items():
         if col not in df.columns:
@@ -75,6 +79,7 @@ def check_numeric_bounds(df: pd.DataFrame) -> list[str]:
 
 
 def check_duplicate_rows(df: pd.DataFrame) -> list[str]:
+    """Return an error string if the DataFrame contains any fully-duplicate rows."""
     n_dup = df.duplicated().sum()
     if n_dup > 0:
         return [f"Dataset contains {n_dup} duplicate rows"]
