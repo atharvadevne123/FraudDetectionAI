@@ -45,7 +45,16 @@ class FraudEnsemble:
         rf_params: Optional[dict] = None,
         calibration_method: str = "isotonic",
         random_state: int = 42,
-    ):
+    ) -> None:
+        """Initialise the three-model ensemble with optional parameter overrides.
+
+        Args:
+            xgb_params: Override dict for XGBoost classifier kwargs.
+            lgb_params: Override dict for LightGBM classifier kwargs.
+            rf_params: Override dict for RandomForest classifier kwargs.
+            calibration_method: Probability calibration method ('isotonic' or 'sigmoid').
+            random_state: Seed for reproducibility.
+        """
         self.random_state = random_state
         self.calibration_method = calibration_method
         self.feature_names = []
