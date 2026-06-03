@@ -122,3 +122,33 @@ class TestRAGExplainerBuildQuery:
         from models.rag.rag_explainer import RAGExplainer
         query = RAGExplainer._build_query(sample_transaction, 0.92, {})
         assert "0.92" in query
+
+
+class TestRAGExplainerRetrieve:
+    @pytest.mark.parametrize("query", [
+        "high amount crypto transaction",
+        "unusual device login",
+        "wire transfer international",
+    ])
+    def test_retrieve_returns_list(self, explainer, query):
+        result = explainer.retrieve(query)
+        assert isinstance(result, list)
+
+    def test_retrieve_empty_index_returns_empty(self, explainer):
+        # When index is None, retrieve should return []
+        original_index = explainer._index
+        explainer._index = None
+        result = explainer.retrieve("some query")
+        assert result == []
+        explainer._index = original_index
+
+    @pytest.mark.parametrize("shap_vals,expected_in_query", [
+        ({"amount_zscore": 2.0}, "amount"),
+        ({}, ""),
+    ])
+    def test_build_query_with_shap(self, sample_transaction, shap_vals, expected_in_query):
+        from models.rag.rag_explainer import RAGExplainer
+        query = RAGExplainer._build_query(sample_transaction, 0.8, shap_vals)
+        assert isinstance(query, str)
+        if expected_in_query:
+            assert expected_in_query in query
