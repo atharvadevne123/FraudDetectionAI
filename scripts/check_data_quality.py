@@ -28,10 +28,13 @@ NUMERIC_BOUNDS = {
 def parse_args() -> Namespace:
     p = argparse.ArgumentParser(description="Run data quality checks on a transaction dataset")
     p.add_argument("--input", required=True, help="Input CSV or Parquet file")
-    p.add_argument("--missing-threshold", type=float, default=0.05,
-                   help="Max allowed missing ratio per column (default 5%%)")
-    p.add_argument("--fail-fast", action="store_true",
-                   help="Exit non-zero on first quality issue")
+    p.add_argument(
+        "--missing-threshold",
+        type=float,
+        default=0.05,
+        help="Max allowed missing ratio per column (default 5%%)",
+    )
+    p.add_argument("--fail-fast", action="store_true", help="Exit non-zero on first quality issue")
     return p.parse_args()
 
 
@@ -67,9 +70,7 @@ def check_numeric_bounds(df: pd.DataFrame) -> list[str]:
             continue
         out_of_range = ((df[col] < lo) | (df[col] > hi)).sum()
         if out_of_range > 0:
-            issues.append(
-                f"Column '{col}' has {out_of_range} values outside [{lo}, {hi}]"
-            )
+            issues.append(f"Column '{col}' has {out_of_range} values outside [{lo}, {hi}]")
     return issues
 
 
