@@ -383,13 +383,15 @@ def _score_transaction(txn: dict) -> dict:
 
 @ns.route("/health")
 class HealthCheck(Resource):
-    def get(self):
+    def get(self) -> tuple[dict, int]:
+        """Return liveness status and whether ensemble model is loaded."""
         return {"status": "ok", "models_loaded": _ensemble is not None}, 200
 
 
 @ns.route("/metrics")
 class Metrics(Resource):
-    def get(self):
+    def get(self) -> Any:
+        """Expose Prometheus metrics in text format for scraping."""
         from flask import Response
 
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
@@ -397,20 +399,22 @@ class Metrics(Resource):
 
 @ns.route("/model/info")
 class ModelInfo(Resource):
-    def get(self):
+    def get(self) -> tuple[dict, int]:
+        """Return metadata about loaded model components and feature count."""
         return {
             "ensemble_loaded": _ensemble is not None,
             "anomaly_loaded": _anomaly_detector is not None,
             "rag_loaded": _rag_explainer is not None,
             "feature_count": len(_feature_cols),
             "version": "1.0.0",
-        }
+        }, 200
 
 
 @ns.route("/predict")
 class Predict(Resource):
     @ns.expect(transaction_model)
-    def post(self):
+    def post(self) -> tuple[dict, int]:
+        """Score a single transaction and return fraud probability and risk tier."""
         try:
             data = _schema.load(request.get_json(force=True) or {})
         except ValidationError as e:
@@ -426,7 +430,8 @@ class Predict(Resource):
 
 @ns.route("/predict/batch")
 class PredictBatch(Resource):
-    def post(self):
+    def post(self) -> tuple[dict, int]:
+        """Score a batch of up to 500 transactions in a single request."""
         payload = request.get_json(force=True) or {}
         transactions = payload.get("transactions")
         if transactions is None:
@@ -454,7 +459,8 @@ class PredictBatch(Resource):
 @ns.route("/feedback")
 class Feedback(Resource):
     @ns.expect(feedback_model)
-    def post(self):
+    def post(self) -> tuple[dict, int]:
+        """Record analyst feedback on a prediction for model retraining signals."""
         try:
             data = _fb_schema.load(request.get_json(force=True) or {})
         except ValidationError as e:
@@ -480,7 +486,7 @@ class Feedback(Resource):
 
 @ns.route("/version")
 class Version(Resource):
-    def get(self):
+    def get(self) -> tuple[dict, int]:
         """Return API version and runtime metadata."""
         import sys as _sys
 
@@ -493,7 +499,7 @@ class Version(Resource):
 
 @ns.route("/readiness")
 class Readiness(Resource):
-    def get(self):
+    def get(self) -> tuple[dict, int]:
         """Return readiness state — 200 when models are loaded, 503 otherwise."""
         ready = _ensemble is not None
         code = 200 if ready else 503
