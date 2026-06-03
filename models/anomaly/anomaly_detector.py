@@ -119,6 +119,7 @@ class AnomalyDetector:
     # ------------------------------------------------------------------
 
     def save(self, path: Union[str, Path, None] = None) -> Path:
+        """Serialise the fitted detector to disk using joblib."""
         path = Path(path) if path else ARTIFACT_DIR / "anomaly_detector.joblib"
         joblib.dump(self, path)
         logger.info("AnomalyDetector saved → {}", path)
@@ -126,6 +127,7 @@ class AnomalyDetector:
 
     @classmethod
     def load(cls, path: Union[str, Path, None] = None) -> "AnomalyDetector":
+        """Deserialise an AnomalyDetector from a joblib file."""
         path = Path(path) if path else ARTIFACT_DIR / "anomaly_detector.joblib"
         obj = joblib.load(path)
         logger.info("AnomalyDetector loaded ← {}", path)
