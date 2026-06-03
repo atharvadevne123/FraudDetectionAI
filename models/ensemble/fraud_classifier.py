@@ -106,8 +106,9 @@ class FraudEnsemble:
         X_arr = self.scaler.fit_transform(X.values)
         y_arr = y.values
 
-        logger.info("Applying SMOTE to balance {:,} samples (fraud rate: {:.2%}).",
-                    len(y_arr), y_arr.mean())
+        logger.info(
+            "Applying SMOTE to balance {:,} samples (fraud rate: {:.2%}).", len(y_arr), y_arr.mean()
+        )
         smote = SMOTE(sampling_strategy=0.1, random_state=self.random_state)
         X_res, y_res = smote.fit_resample(X_arr, y_arr)
         logger.info("Post-SMOTE: {:,} samples.", len(y_res))
@@ -171,12 +172,16 @@ class FraudEnsemble:
         results = []
         for i in range(len(X)):
             top_idx = np.argsort(np.abs(sv[i]))[::-1][:max_display]
-            results.append({
-                "shap_values": {self.feature_names[j]: float(sv[i][j]) for j in top_idx},
-                "base_value": float(self._shap_explainer.expected_value
-                                    if not isinstance(self._shap_explainer.expected_value, list)
-                                    else self._shap_explainer.expected_value[1]),
-            })
+            results.append(
+                {
+                    "shap_values": {self.feature_names[j]: float(sv[i][j]) for j in top_idx},
+                    "base_value": float(
+                        self._shap_explainer.expected_value
+                        if not isinstance(self._shap_explainer.expected_value, list)
+                        else self._shap_explainer.expected_value[1]
+                    ),
+                }
+            )
         return results
 
     # ------------------------------------------------------------------
@@ -202,7 +207,13 @@ class FraudEnsemble:
     # Helpers
     # ------------------------------------------------------------------
 
-    def _log_metrics(self, X_train: np.ndarray, y_train: np.ndarray, eval_X: Optional[pd.DataFrame], eval_y: Optional[pd.Series]) -> None:
+    def _log_metrics(
+        self,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        eval_X: Optional[pd.DataFrame],
+        eval_y: Optional[pd.Series],
+    ) -> None:
         """Log AUC-ROC and average-precision metrics to the active MLflow run."""
         train_proba = self.ensemble.predict_proba(X_train)[:, 1]
         mlflow.log_metric("train_auc_roc", roc_auc_score(y_train, train_proba))
