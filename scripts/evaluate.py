@@ -40,6 +40,7 @@ def parse_args() -> Namespace:
 
 
 def load_data(path: str) -> pd.DataFrame:
+    """Read a CSV or Parquet file into a DataFrame based on file extension."""
     p = Path(path)
     if p.suffix == ".parquet":
         return pd.read_parquet(p)
@@ -47,6 +48,7 @@ def load_data(path: str) -> pd.DataFrame:
 
 
 def main() -> None:
+    """Load test data and saved model artifacts, then print evaluation metrics."""
     args = parse_args()
 
     logger.info("Loading test data from {}", args.test_data)
