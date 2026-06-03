@@ -389,7 +389,10 @@ docker compose up --build
 |---|---|---|
 | `POST` | `/predict` | Score single transaction (optional RAG explanation) |
 | `POST` | `/predict/batch` | Score batch ≤ 500 transactions |
+| `POST` | `/feedback` | Submit analyst feedback (transaction_id, actual_label) |
 | `GET` | `/health` | Liveness probe |
+| `GET` | `/readiness` | Readiness probe — 200 when models loaded, 503 otherwise |
+| `GET` | `/version` | API version, Python version, build metadata |
 | `GET` | `/model/info` | Model load status + feature count |
 | `GET` | `/metrics` | Prometheus metrics |
 | `GET` | `/docs` | Swagger UI (interactive) |
@@ -411,13 +414,20 @@ Connect Power BI Desktop directly to these files for live monitoring.
 
 ```bash
 # Install dev dependencies
-pip install -r requirements.txt pytest pytest-cov
+pip install -r requirements.txt
 
 # Run all tests
 pytest tests/ -v
 
-# Run with coverage
-pytest tests/ --cov=. --cov-report=term-missing
+# Run with coverage (fails if < 70%)
+pytest tests/ --cov=api --cov=models --cov=pipeline --cov=monitoring --cov=utils --cov-report=term-missing
+
+# Lint and format checks
+make format-check   # ruff format --check
+make lint           # ruff check
+
+# Security scan
+make security       # bandit -r api models pipeline
 
 # Run a specific test module
 pytest tests/test_anomaly_detector_extended.py -v
@@ -425,16 +435,20 @@ pytest tests/test_fraud_classifier.py -v
 pytest tests/test_feature_engineering_extended.py -v
 ```
 
-Test suite covers:
+Test suite — **375 tests** across 17 modules:
 
 | Module | Tests |
 |---|---|
-| `AnomalyDetector` | init, score shape/range, DataFrame input, persistence |
-| `FraudEnsemble` | fit, predict, SMOTE, SHAP explanations, persistence |
-| `TransactionFeatureEngineer` | amount features, temporal, categorical encoding, behavioral |
-| `RAGExplainer` | index build, semantic search, LLM explanation |
-| `DriftMonitor` | reference setting, drift detection, thresholds |
-| Flask API | `/version`, `/readiness`, `/model/info` endpoints |
+| `AnomalyDetector` | init, score shape/range, contamination, DataFrame input, persistence, predict_proba |
+| `FraudEnsemble` | fit, predict, SMOTE, SHAP explanations, persistence, edge-cases |
+| `TransactionFeatureEngineer` | amount features, temporal, velocity windows, encoding, row preservation |
+| `RAGExplainer` | index build, semantic search, LLM explanation, empty index |
+| `DriftMonitor` | reference setting, drift detection, score-shift, missing-ratio |
+| Flask API | `/health`, `/version`, `/readiness`, `/model/info`, `/feedback`, input validation |
+| `utils/metrics` | precision@k, average_precision, false_positive_rate, detection_rate |
+| `utils/validation` | required fields, amount boundaries, utilization bounds |
+| `config/constants` | risk-tier boundaries, constant types |
+| `scripts/batch_predict` | assign_risk_tier boundaries, negative scores |
 
 ---
 

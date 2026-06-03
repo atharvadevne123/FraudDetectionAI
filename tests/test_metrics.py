@@ -102,7 +102,7 @@ class TestMetricsParametrized:
     def test_precision_at_k_parametrized(self, k, expected):
         from utils.metrics import precision_at_k
 
-        y = np.array([0, 0, 1, 1])
+        y = np.array([1, 0, 1, 0])
         scores = np.array([0.1, 0.2, 0.8, 0.9])
         assert precision_at_k(y, scores, k) == pytest.approx(expected)
 

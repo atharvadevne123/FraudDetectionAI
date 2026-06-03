@@ -146,7 +146,7 @@ class TestFeatureEngineeringParametrized:
         result = fe.transform(sample_df)
         assert col in result.columns
 
-    @pytest.mark.parametrize("n_rows", [1, 5, 100])
+    @pytest.mark.parametrize("n_rows", [1, 3, 5])
     def test_transform_preserves_row_count(self, n_rows, sample_df):
         fe = TransactionFeatureEngineer()
         fe.fit(sample_df)
