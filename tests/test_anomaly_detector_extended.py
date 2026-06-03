@@ -87,3 +87,25 @@ class TestAnomalyDetectorPersistence:
         orig_scores = fitted_detector.score(sample_data)
         load_scores = loaded.score(sample_data)
         np.testing.assert_allclose(orig_scores, load_scores, atol=1e-6)
+
+
+class TestAnomalyDetectorExtendedParametrized:
+    @pytest.mark.parametrize("n_rows", [1, 10, 50])
+    def test_score_and_predict_row_counts(self, fitted_detector, n_rows):
+        rng = __import__("numpy").random.default_rng(99)
+        X = rng.standard_normal((n_rows, 5))
+        result = fitted_detector.score_and_predict(X)
+        assert len(result) == n_rows
+        assert "anomaly_score" in result.columns
+        assert "is_anomaly" in result.columns
+
+    @pytest.mark.parametrize("contamination", [0.01, 0.05, 0.20])
+    def test_predict_proba_sums_to_one(self, contamination, sample_data):
+        import numpy as np
+        det = __import__(
+            "models.anomaly.anomaly_detector",
+            fromlist=["AnomalyDetector"],
+        ).AnomalyDetector(contamination=contamination, n_estimators=10)
+        det.fit(sample_data)
+        proba = det.predict_proba(sample_data[:5])
+        assert __import__("numpy").allclose(proba.sum(axis=1), 1.0)
