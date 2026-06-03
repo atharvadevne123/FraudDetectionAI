@@ -11,7 +11,18 @@ CREDIT_UTILIZATION_RANGE = (0.0, 1.0)
 
 
 def validate_transaction_payload(payload: dict[str, Any]) -> list[str]:
-    """Return a list of validation error strings; empty list means valid."""
+    """Validate a raw transaction payload dict against business rules.
+
+    Checks for required fields, numeric type coercibility, and value range
+    constraints for amount, credit_utilization, account_age_days, and
+    prior_fraud_count.
+
+    Args:
+        payload: Raw transaction dict from API request or batch file.
+
+    Returns:
+        List of human-readable error strings; an empty list means the payload is valid.
+    """
     errors: list[str] = []
 
     missing = REQUIRED_FIELDS - set(payload.keys())
