@@ -102,6 +102,18 @@ class FraudEnsemble:
         eval_y: Optional[pd.Series] = None,
         mlflow_run: bool = True,
     ) -> "FraudEnsemble":
+        """Fit the ensemble with SMOTE oversampling and optional MLflow tracking.
+
+        Args:
+            X: Feature DataFrame for training.
+            y: Binary fraud labels (0=legit, 1=fraud).
+            eval_X: Optional held-out features for validation metrics.
+            eval_y: Optional held-out labels for validation metrics.
+            mlflow_run: Whether to log metrics to an active MLflow run.
+
+        Returns:
+            Self, to allow method chaining.
+        """
         self.feature_names = list(X.columns)
         X_arr = self.scaler.fit_transform(X.values)
         y_arr = y.values
