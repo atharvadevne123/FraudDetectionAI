@@ -62,16 +62,18 @@ class DriftMonitor:
             self.set_reference(current)
             return {"drift_detected": False, "reason": "Reference just set."}
 
-        numeric_cols = [c for c in current.select_dtypes(include="number").columns
-                        if c in self._reference.columns]
+        numeric_cols = [
+            c
+            for c in current.select_dtypes(include="number").columns
+            if c in self._reference.columns
+        ]
 
         report_data = self._run_evidently(current, numeric_cols)
         score_shift = self._check_score_shift(current)
         missing_ratio = self._check_missing(current)
 
         drift_detected = (
-            report_data.get("dataset_drift", False)
-            or abs(score_shift) > self.score_shift_threshold
+            report_data.get("dataset_drift", False) or abs(score_shift) > self.score_shift_threshold
         )
 
         summary = {
@@ -89,7 +91,9 @@ class DriftMonitor:
         self._save_report(summary)
 
         if drift_detected:
-            logger.warning("DRIFT DETECTED — {} features drifted.", len(summary["drifted_features"]))
+            logger.warning(
+                "DRIFT DETECTED — {} features drifted.", len(summary["drifted_features"])
+            )
         else:
             logger.info("No significant drift. Batch stats healthy.")
 
@@ -109,11 +113,13 @@ class DriftMonitor:
         if "fraud_score" in current.columns:
             col_mapping.prediction = "fraud_score"
 
-        report = Report(metrics=[
-            DatasetDriftMetric(drift_share_threshold=self.drift_threshold),
-            DataDriftTable(num_stattest="ks", cat_stattest="chi2"),
-            DatasetMissingValuesMetric(),
-        ])
+        report = Report(
+            metrics=[
+                DatasetDriftMetric(drift_share_threshold=self.drift_threshold),
+                DataDriftTable(num_stattest="ks", cat_stattest="chi2"),
+                DatasetMissingValuesMetric(),
+            ]
+        )
 
         try:
             report.run(reference_data=ref, current_data=cur, column_mapping=col_mapping)
@@ -123,13 +129,12 @@ class DriftMonitor:
             dataset_metric = next(
                 (m for m in metrics if m.get("metric") == "DatasetDriftMetric"), {}
             )
-            drift_table = next(
-                (m for m in metrics if m.get("metric") == "DataDriftTable"), {}
-            )
+            drift_table = next((m for m in metrics if m.get("metric") == "DataDriftTable"), {})
 
             drifted = dataset_metric.get("result", {}).get("dataset_drift", False)
             drifted_cols = [
-                col for col, stats in drift_table.get("result", {}).get("drift_by_columns", {}).items()
+                col
+                for col, stats in drift_table.get("result", {}).get("drift_by_columns", {}).items()
                 if stats.get("drift_detected")
             ]
             return {"dataset_drift": drifted, "drifted_features": drifted_cols}
@@ -140,6 +145,7 @@ class DriftMonitor:
     def _fallback_drift_check(self, current: pd.DataFrame, cols: list[str]) -> dict[str, Any]:
         """KS-based drift check when Evidently fails."""
         from scipy import stats
+
         drifted = []
         for col in cols:
             if col not in self._reference.columns:
@@ -164,8 +170,9 @@ class DriftMonitor:
         ref_mean = self._reference["fraud_score"].mean()
         cur_mean = current["fraud_score"].mean()
         shift = cur_mean - ref_mean
-        logger.debug("Score shift: {:.4f} (ref mean: {:.4f}, cur mean: {:.4f}).",
-                     shift, ref_mean, cur_mean)
+        logger.debug(
+            "Score shift: {:.4f} (ref mean: {:.4f}, cur mean: {:.4f}).", shift, ref_mean, cur_mean
+        )
         return float(shift)
 
     def _check_missing(self, current: pd.DataFrame) -> float:
@@ -187,9 +194,20 @@ class DriftMonitor:
         ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 
         # Transaction-level export
-        txn_cols = ["transaction_id", "user_id", "amount", "merchant_category",
-                    "timestamp", "fraud_score", "anomaly_score", "fraud_label",
-                    "is_anomaly", "hour_of_day", "is_weekend", "is_night"]
+        txn_cols = [
+            "transaction_id",
+            "user_id",
+            "amount",
+            "merchant_category",
+            "timestamp",
+            "fraud_score",
+            "anomaly_score",
+            "fraud_label",
+            "is_anomaly",
+            "hour_of_day",
+            "is_weekend",
+            "is_night",
+        ]
         available = [c for c in txn_cols if c in current.columns]
         txn_path = MONITOR_DIR / f"powerbi_transactions_{ts}.csv"
         current[available].to_csv(txn_path, index=False)
@@ -201,9 +219,14 @@ class DriftMonitor:
             "drift_detected": int(summary["drift_detected"]),
             "n_drifted_features": len(summary.get("drifted_features", [])),
             "fraud_rate": current.get("fraud_label", pd.Series(dtype=float)).mean()
-                         if "fraud_label" in current.columns else None,
-            "avg_fraud_score": current["fraud_score"].mean() if "fraud_score" in current.columns else None,
-            "avg_anomaly_score": current["anomaly_score"].mean() if "anomaly_score" in current.columns else None,
+            if "fraud_label" in current.columns
+            else None,
+            "avg_fraud_score": current["fraud_score"].mean()
+            if "fraud_score" in current.columns
+            else None,
+            "avg_anomaly_score": current["anomaly_score"].mean()
+            if "anomaly_score" in current.columns
+            else None,
             "missing_ratio": summary["missing_ratio"],
         }
         kpi_path = MONITOR_DIR / "powerbi_drift_kpis.csv"
