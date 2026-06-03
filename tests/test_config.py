@@ -78,3 +78,29 @@ class TestVelocityWindows:
         assert isinstance(API_VERSION, str)
         parts = API_VERSION.split(".")
         assert len(parts) == 3
+
+
+class TestConfigParametrized:
+    @pytest.mark.parametrize(
+        "tier,expected_range",
+        [
+            ("CRITICAL", (0.90, 1.01)),
+            ("HIGH", (0.70, 0.90)),
+            ("MEDIUM", (0.50, 0.70)),
+            ("LOW", (0.30, 0.50)),
+            ("CLEAN", (0.00, 0.30)),
+        ],
+    )
+    def test_risk_tier_boundaries(self, tier, expected_range):
+        assert RISK_TIERS[tier] == expected_range
+
+    @pytest.mark.parametrize("constant_name,expected_type", [
+        ("FEATURE_COUNT", int),
+        ("MAX_BATCH_SIZE", int),
+        ("DEFAULT_N_ESTIMATORS", int),
+        ("SMOTE_TARGET_RATIO", float),
+        ("DEFAULT_CONTAMINATION", float),
+    ])
+    def test_constant_types(self, constant_name, expected_type):
+        import config.constants as c
+        assert isinstance(getattr(c, constant_name), expected_type)
