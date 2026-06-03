@@ -59,7 +59,6 @@ with DAG(
     max_active_runs=1,
     tags=["fraud", "ml", "production"],
 ) as dag:
-
     # -----------------------------------------------------------------------
     # Task 1: Ingest raw transactions from S3
     # -----------------------------------------------------------------------
@@ -91,6 +90,7 @@ with DAG(
     def feature_engineering(raw_path: str) -> str:
         """Load or fit the TransactionFeatureEngineer and produce enriched feature parquet."""
         import sys
+
         sys.path.insert(0, "/opt/airflow")
         import joblib
 
@@ -120,6 +120,7 @@ with DAG(
     def anomaly_scoring(feat_path: str) -> str:
         """Score transactions with the anomaly detector ensemble; attach scores to DataFrame."""
         import sys
+
         sys.path.insert(0, "/opt/airflow")
         from models.anomaly.anomaly_detector import AnomalyDetector
 
@@ -151,25 +152,34 @@ with DAG(
     @task(task_id="ensemble_scoring")
     def ensemble_scoring(anomaly_path: str) -> str:
         import sys
+
         sys.path.insert(0, "/opt/airflow")
         from models.ensemble.fraud_classifier import FraudEnsemble
 
         df = pd.read_parquet(anomaly_path)
-        exclude = {"is_fraud", "transaction_id", "user_id", "timestamp",
-                   "merchant_id", "ip_address", "device_fingerprint", "country"}
+        exclude = {
+            "is_fraud",
+            "transaction_id",
+            "user_id",
+            "timestamp",
+            "merchant_id",
+            "ip_address",
+            "device_fingerprint",
+            "country",
+        }
 
         if Path(FEATURE_COLS_PATH).exists():
             feature_cols = json.loads(Path(FEATURE_COLS_PATH).read_text())
         else:
-            feature_cols = [c for c in df.select_dtypes(include="number").columns
-                            if c not in exclude]
+            feature_cols = [
+                c for c in df.select_dtypes(include="number").columns if c not in exclude
+            ]
 
         if Path(ENSEMBLE_ARTIFACT).exists():
             model = FraudEnsemble.load(ENSEMBLE_ARTIFACT)
         else:
             raise FileNotFoundError(
-                f"Ensemble model not found at {ENSEMBLE_ARTIFACT}. "
-                "Run scripts/train.py first."
+                f"Ensemble model not found at {ENSEMBLE_ARTIFACT}. " "Run scripts/train.py first."
             )
 
         proba = model.predict_proba(df[feature_cols].fillna(0))[:, 1]
@@ -189,6 +199,7 @@ with DAG(
     @task(task_id="rag_explanation")
     def rag_explanation(scored_path: str) -> str:
         import sys
+
         sys.path.insert(0, "/opt/airflow")
         from models.ensemble.fraud_classifier import FraudEnsemble
         from models.rag.rag_explainer import RAGExplainer
@@ -225,7 +236,9 @@ with DAG(
             )
             explanations[row.get("transaction_id", str(_))] = explanation
 
-        df["explanation"] = df.get("transaction_id", df.index.astype(str)).map(explanations).fillna("")
+        df["explanation"] = (
+            df.get("transaction_id", df.index.astype(str)).map(explanations).fillna("")
+        )
         out_path = scored_path.replace("scored_batch", "explained_batch")
         df.to_parquet(out_path, index=False)
         logger.info("RAG explanations generated for {:,} transactions.", len(explanations))
@@ -251,6 +264,7 @@ with DAG(
     def drift_check(explained_path: str) -> None:
         """Run Evidently drift detection and alert on score distribution shifts."""
         import sys
+
         sys.path.insert(0, "/opt/airflow")
         from monitoring.drift_monitor import DriftMonitor
 
@@ -283,29 +297,35 @@ with DAG(
 # Synthetic data helper (demo/testing)
 # ---------------------------------------------------------------------------
 
+
 def _generate_synthetic_batch(n: int = 500) -> pd.DataFrame:
     import numpy as np
+
     rng = np.random.default_rng(42)
     n_fraud = int(n * 0.02)
-    amounts = np.concatenate([
-        rng.lognormal(4, 1.2, n - n_fraud),
-        rng.lognormal(6, 0.5, n_fraud),
-    ])
+    amounts = np.concatenate(
+        [
+            rng.lognormal(4, 1.2, n - n_fraud),
+            rng.lognormal(6, 0.5, n_fraud),
+        ]
+    )
     rng.shuffle(amounts)
-    df = pd.DataFrame({
-        "transaction_id": [f"TXN{i:06d}" for i in range(n)],
-        "user_id": rng.integers(1000, 9999, n),
-        "amount": amounts.round(2),
-        "merchant_category": rng.choice(
-            ["retail", "grocery", "crypto", "gambling", "restaurant"], n
-        ),
-        "payment_method": rng.choice(["credit", "debit", "wire"], n),
-        "device_type": rng.choice(["mobile", "desktop", "tablet"], n),
-        "channel": rng.choice(["online", "pos", "mobile_app"], n),
-        "timestamp": pd.date_range("2024-01-01", periods=n, freq="30s"),
-        "account_age_days": rng.integers(1, 3650, n),
-        "credit_utilization": rng.uniform(0, 1, n).round(4),
-        "prior_fraud_count": rng.choice([0, 0, 0, 0, 1, 2], n),
-        "is_fraud": ([0] * (n - n_fraud) + [1] * n_fraud),
-    })
+    df = pd.DataFrame(
+        {
+            "transaction_id": [f"TXN{i:06d}" for i in range(n)],
+            "user_id": rng.integers(1000, 9999, n),
+            "amount": amounts.round(2),
+            "merchant_category": rng.choice(
+                ["retail", "grocery", "crypto", "gambling", "restaurant"], n
+            ),
+            "payment_method": rng.choice(["credit", "debit", "wire"], n),
+            "device_type": rng.choice(["mobile", "desktop", "tablet"], n),
+            "channel": rng.choice(["online", "pos", "mobile_app"], n),
+            "timestamp": pd.date_range("2024-01-01", periods=n, freq="30s"),
+            "account_age_days": rng.integers(1, 3650, n),
+            "credit_utilization": rng.uniform(0, 1, n).round(4),
+            "prior_fraud_count": rng.choice([0, 0, 0, 0, 1, 2], n),
+            "is_fraud": ([0] * (n - n_fraud) + [1] * n_fraud),
+        }
+    )
     return df
