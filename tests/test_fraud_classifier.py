@@ -97,3 +97,42 @@ class TestFraudEnsemblePersistence:
         proba_orig = fitted_ensemble.predict_proba(feature_df)
         proba_load = loaded.predict_proba(feature_df)
         np.testing.assert_allclose(proba_orig, proba_load, atol=1e-6)
+
+
+class TestFraudEnsembleEdgeCases:
+    @pytest.mark.parametrize("n_fraud_pct", [0.05, 0.10, 0.20])
+    def test_fit_various_fraud_rates(self, n_fraud_pct):
+        from models.ensemble.fraud_classifier import FraudEnsemble
+
+        rng = np.random.default_rng(42)
+        n = 200
+        n_fraud = max(6, int(n * n_fraud_pct))
+        X = pd.DataFrame(
+            {
+                "amount_zscore": rng.normal(0, 1, n),
+                "amount_log": rng.uniform(1, 10, n),
+                "credit_utilization": rng.uniform(0, 1, n),
+            }
+        )
+        y = pd.Series([1] * n_fraud + [0] * (n - n_fraud))
+        fe = FraudEnsemble(random_state=0)
+        fe.fit(X, y, mlflow_run=False)
+        assert fe._fitted
+
+    def test_predict_all_zero_features(self, fitted_ensemble):
+        X = pd.DataFrame(
+            {
+                "amount_zscore": [0.0] * 5,
+                "amount_log": [0.0] * 5,
+                "credit_utilization": [0.0] * 5,
+                "account_age_days": [0.0] * 5,
+            }
+        )
+        proba = fitted_ensemble.predict_proba(X)
+        assert proba.shape == (5, 2)
+
+    @pytest.mark.parametrize("max_display", [1, 5, 10])
+    def test_explain_respects_max_display(self, fitted_ensemble, feature_df, max_display):
+        result = fitted_ensemble.explain(feature_df.iloc[:1], max_display=max_display)
+        if isinstance(result, list) and result:
+            assert len(result[0]["shap_values"]) <= max_display
