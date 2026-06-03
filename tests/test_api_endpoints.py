@@ -60,3 +60,40 @@ class TestModelInfoEndpoint:
         data = client.get("/model/info").get_json()
         assert data["ensemble_loaded"] is False
         assert data["anomaly_loaded"] is False
+
+
+class TestFeedbackEndpoint:
+    def test_feedback_missing_transaction_id(self, client):
+        payload = {"predicted_tier": "HIGH", "actual_label": 1}
+        r = client.post(
+            "/feedback",
+            data=__import__("json").dumps(payload),
+            content_type="application/json",
+        )
+        assert r.status_code == 400
+
+    def test_feedback_missing_actual_label(self, client):
+        payload = {"transaction_id": "TXN-001", "predicted_tier": "HIGH"}
+        r = client.post(
+            "/feedback",
+            data=__import__("json").dumps(payload),
+            content_type="application/json",
+        )
+        assert r.status_code == 400
+
+    @pytest.mark.parametrize("actual_label", [0, 1])
+    def test_feedback_valid_labels(self, client, tmp_path, monkeypatch):
+        import api.app as app_module
+
+        monkeypatch.setattr(app_module, "FEEDBACK_LOG_PATH", tmp_path / "feedback.jsonl")
+        payload = {
+            "transaction_id": "TXN-001",
+            "predicted_tier": "HIGH",
+            "actual_label": actual_label,
+        }
+        r = client.post(
+            "/feedback",
+            data=__import__("json").dumps(payload),
+            content_type="application/json",
+        )
+        assert r.status_code == 200
