@@ -98,6 +98,14 @@ class RAGExplainer:
         logger.success("FAISS index built: {} chunks, {} dimensions.", len(chunks), dim)
 
     def save_index(self, path: Optional[Union[str, Path]] = None) -> Path:
+        """Persist the FAISS index and chunk list to disk.
+
+        Args:
+            path: Target path for the .index file; defaults to artifacts/faiss.index.
+
+        Returns:
+            The resolved Path where the index was written.
+        """
         path = Path(path) if path else ARTIFACT_DIR / "faiss.index"
         if self._index:
             faiss.write_index(self._index, str(path))
@@ -107,6 +115,14 @@ class RAGExplainer:
         return path
 
     def load_index(self, path: Optional[Union[str, Path]] = None) -> "RAGExplainer":
+        """Load a previously saved FAISS index and its corresponding chunk list.
+
+        Args:
+            path: Source path for the .index file; defaults to artifacts/faiss.index.
+
+        Returns:
+            Self, to allow method chaining.
+        """
         path = Path(path) if path else ARTIFACT_DIR / "faiss.index"
         self._index = faiss.read_index(str(path))
         chunk_path = path.with_suffix(".chunks.json")
