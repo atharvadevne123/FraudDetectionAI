@@ -101,7 +101,6 @@ class TestAnomalyDetectorExtendedParametrized:
 
     @pytest.mark.parametrize("contamination", [0.01, 0.05, 0.20])
     def test_predict_proba_sums_to_one(self, contamination, sample_data):
-        import numpy as np
         det = __import__(
             "models.anomaly.anomaly_detector",
             fromlist=["AnomalyDetector"],

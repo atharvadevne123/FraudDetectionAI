@@ -82,7 +82,7 @@ class TestFeedbackEndpoint:
         assert r.status_code == 400
 
     @pytest.mark.parametrize("actual_label", [0, 1])
-    def test_feedback_valid_labels(self, client, tmp_path, monkeypatch):
+    def test_feedback_valid_labels(self, client, tmp_path, monkeypatch, actual_label):
         import api.app as app_module
 
         monkeypatch.setattr(app_module, "FEEDBACK_LOG_PATH", tmp_path / "feedback.jsonl")

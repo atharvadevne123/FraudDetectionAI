@@ -153,9 +153,10 @@ class TestFeatureEngineeringExtendedParametrized:
     def test_fit_transform_consistent_with_fit_then_transform(self, n):
         from pipeline.feature_engineering import TransactionFeatureEngineer
 
-        df = __import__("tests.conftest", fromlist=["sample_df"])
+        __import__("tests.conftest", fromlist=["sample_df"])
         # use sample_df fixture data directly by reading the full file
-        import sys, os
+        import os
+        import sys
         sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         import numpy as _np
         _rng = _np.random.default_rng(n)
