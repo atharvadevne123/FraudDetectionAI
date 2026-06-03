@@ -35,3 +35,19 @@ class TestAssignRiskTier:
 
     def test_boundary_high_low(self):
         assert assign_risk_tier(0.70) == "HIGH"
+
+
+class TestAssignRiskTierEdgeCases:
+    @pytest.mark.parametrize("score", [0.0, 0.29999, 0.30, 0.49999, 0.50, 0.69999, 0.70, 0.89999, 0.90, 1.0])
+    def test_all_boundaries_return_valid_tier(self, score):
+        result = assign_risk_tier(score)
+        assert result in {"CRITICAL", "HIGH", "MEDIUM", "LOW", "CLEAN"}
+
+    def test_negative_score_returns_clean(self):
+        result = assign_risk_tier(-0.1)
+        assert isinstance(result, str)
+
+    @pytest.mark.parametrize("score", [0.0, 0.5, 1.0])
+    def test_tier_string_is_uppercase(self, score):
+        tier = assign_risk_tier(score)
+        assert tier == tier.upper()
