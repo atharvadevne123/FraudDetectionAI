@@ -75,3 +75,37 @@ class TestScore:
         detector.fit(X_train)
         labels = detector.predict(X_train)
         assert set(labels).issubset({0, 1})
+
+
+class TestAnomalyDetectorParametrized:
+    @pytest.mark.parametrize("contamination", [0.01, 0.05, 0.1])
+    def test_contamination_accepted(self, contamination):
+        det = AnomalyDetector(contamination=contamination)
+        assert det.contamination == contamination
+
+    @pytest.mark.parametrize("n_samples,n_features", [(50, 3), (100, 5), (200, 8)])
+    def test_fit_various_shapes(self, n_samples, n_features):
+        rng = np.random.default_rng(0)
+        X = rng.standard_normal((n_samples, n_features))
+        det = AnomalyDetector(contamination=0.05, n_estimators=10)
+        det.fit(X)
+        assert det._fitted
+
+    @pytest.mark.parametrize("n_samples", [1, 5, 50])
+    def test_score_returns_correct_length(self, n_samples):
+        rng = np.random.default_rng(1)
+        X_train = rng.standard_normal((200, 4))
+        X_test = rng.standard_normal((n_samples, 4))
+        det = AnomalyDetector(contamination=0.05, n_estimators=10)
+        det.fit(X_train)
+        scores = det.score(X_test)
+        assert len(scores) == n_samples
+
+    def test_predict_proba_shape(self):
+        rng = np.random.default_rng(2)
+        X = rng.standard_normal((100, 4))
+        det = AnomalyDetector(contamination=0.05, n_estimators=10)
+        det.fit(X)
+        proba = det.predict_proba(X[:5])
+        assert proba.shape == (5, 2)
+        assert np.allclose(proba.sum(axis=1), 1.0)
