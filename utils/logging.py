@@ -39,6 +39,6 @@ def configure_logging(
         )
 
 
-def get_logger(name: str):
+def get_logger(name: str) -> "logger":
     """Return a loguru logger bound with the given module name."""
     return logger.bind(name=name)
