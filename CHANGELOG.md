@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-06-03
+
+### Added
+- 60-commit quality improvement pass: ruff formatting, type annotations, docstrings, test expansion
+- Google-style docstrings on `FraudEnsemble.fit()`, `RAGExplainer.save_index/load_index`,
+  `AnomalyDetector.save/load`, `DriftMonitor._fallback_drift_check`,
+  `TransactionFeatureEngineer._behavioral_features`, all `utils/metrics.py` and `utils/validation.py` functions,
+  and all script `main()`/`load_data()`/`score_chunk()` functions
+- Return type annotations on all Flask-RestX route handlers and `get_logger()`
+- Parametrized test classes across 14 test files (150+ new assertions)
+- Coverage configuration in `pyproject.toml` (`fail_under = 70`)
+- Makefile targets: `format`, `format-check`, `security`, `generate-data`
+- `.env.example` expanded with all required variables, threshold overrides, and inline comments
+- CONTRIBUTING.md expanded with testing guide, code style section, and commit examples
+
+### Changed
+- Ruff format applied to 10 source files (api/app.py, config/constants.py, models/*, monitoring/*, scripts/*)
+- E402 lint suppressions added to `scripts/batch_predict.py` and `scripts/evaluate.py` for intentional `sys.path` imports
+
 ### Added
 - `/version` endpoint returning API version and Python runtime metadata
 - `/readiness` endpoint for Kubernetes-style readiness probes
