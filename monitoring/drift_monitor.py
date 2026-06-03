@@ -36,7 +36,13 @@ class DriftMonitor:
         self,
         drift_threshold: float = 0.15,
         score_shift_threshold: float = 0.05,
-    ):
+    ) -> None:
+        """Initialise the drift monitor and load any persisted reference distribution.
+
+        Args:
+            drift_threshold: Fraction of features that must drift to trigger an alert.
+            score_shift_threshold: Absolute mean fraud-score delta that triggers an alert.
+        """
         self.drift_threshold = drift_threshold
         self.score_shift_threshold = score_shift_threshold
         self._reference: Optional[pd.DataFrame] = None
