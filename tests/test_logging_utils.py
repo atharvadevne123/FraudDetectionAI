@@ -1,6 +1,8 @@
 """Tests for utils.logging."""
 from __future__ import annotations
 
+import pytest
+
 
 class TestConfigureLogging:
     def test_configure_stdout_only(self, tmp_path):
@@ -41,3 +43,24 @@ class TestGetLogger:
         log_a = get_logger("module_a")
         log_b = get_logger("module_b")
         assert log_a is not log_b
+
+
+class TestLoggingParametrized:
+    @pytest.mark.parametrize("level", ["DEBUG", "INFO", "WARNING", "ERROR"])
+    def test_configure_with_each_level(self, level):
+        from utils.logging import configure_logging
+        configure_logging(level=level)  # should not raise
+
+    @pytest.mark.parametrize("name", ["api", "model", "drift_monitor", "feature_eng"])
+    def test_get_logger_various_names(self, name):
+        from utils.logging import get_logger
+        log = get_logger(name)
+        assert log is not None
+
+    def test_configure_logging_with_file(self, tmp_path):
+        from utils.logging import configure_logging
+        log_path = tmp_path / "test.log"
+        configure_logging(level="INFO", log_file=str(log_path))
+        # After configuring, importing and calling should not raise
+        import loguru
+        loguru.logger.info("test message")
