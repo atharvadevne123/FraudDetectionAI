@@ -17,7 +17,7 @@ from loguru import logger
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
-from config.constants import MAX_BATCH_SIZE, RISK_TIERS
+from config.constants import MAX_BATCH_SIZE, RISK_TIERS  # noqa: E402
 
 
 def parse_args() -> Namespace:
