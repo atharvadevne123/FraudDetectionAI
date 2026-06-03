@@ -1,6 +1,8 @@
 """Tests for utils.validation."""
 from __future__ import annotations
 
+import pytest
+
 from utils.validation import validate_transaction_payload
 
 VALID_PAYLOAD = {
@@ -81,3 +83,28 @@ class TestOptionalFields:
     def test_non_integer_account_age(self):
         p = {**VALID_PAYLOAD, "account_age_days": "old"}
         assert validate_transaction_payload(p)
+
+
+class TestValidationParametrized:
+    @pytest.mark.parametrize("amount", [0.01, 500.0, 999999.99, 1_000_000.0])
+    def test_valid_amounts_boundary(self, amount):
+        from utils.validation import validate_transaction_payload
+        p = {**{"user_id": 1, "amount": amount, "merchant_category": "retail", "payment_method": "credit"}}
+        # Amounts within bounds should return empty errors list
+        errors = validate_transaction_payload(p)
+        assert "amount" not in " ".join(errors)
+
+    @pytest.mark.parametrize("util", [0.0, 0.5, 1.0])
+    def test_valid_utilization_boundary(self, util):
+        from utils.validation import validate_transaction_payload
+        p = {"user_id": 1, "amount": 100.0, "merchant_category": "retail",
+             "payment_method": "credit", "credit_utilization": util}
+        assert validate_transaction_payload(p) == []
+
+    @pytest.mark.parametrize("field", ["user_id", "amount", "merchant_category", "payment_method"])
+    def test_each_required_field_missing_produces_error(self, field):
+        from utils.validation import validate_transaction_payload
+        payload = {"user_id": 1, "amount": 100.0, "merchant_category": "retail", "payment_method": "credit"}
+        del payload[field]
+        errors = validate_transaction_payload(payload)
+        assert len(errors) > 0
