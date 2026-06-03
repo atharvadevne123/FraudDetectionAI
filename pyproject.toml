@@ -31,6 +31,20 @@ testpaths = ["tests"]
 asyncio_mode = "strict"
 addopts = "-v --tb=short"
 
+[tool.coverage.run]
+source = ["api", "models", "pipeline", "monitoring", "utils", "config"]
+omit = ["tests/*", "scripts/*", "*/migrations/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 70
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py39"
