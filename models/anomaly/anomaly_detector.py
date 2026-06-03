@@ -34,7 +34,14 @@ class AnomalyDetector:
         contamination: float = 0.02,
         n_estimators: int = 200,
         random_state: int = 42,
-    ):
+    ) -> None:
+        """Initialise the three-model anomaly detector ensemble.
+
+        Args:
+            contamination: Expected fraction of anomalous samples (0, 0.5).
+            n_estimators: Number of trees for IsolationForest.
+            random_state: Seed for reproducible IsolationForest training.
+        """
         self.contamination = contamination
         self.scaler = StandardScaler()
         self.iforest = IForest(
