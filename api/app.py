@@ -69,9 +69,9 @@ FRAUD_SCORE_HISTOGRAM = Histogram(
 # ─── Configurable thresholds ──────────────────────────────────────────────────
 
 THRESHOLD_CRITICAL = float(os.getenv("THRESHOLD_CRITICAL", "0.90"))
-THRESHOLD_HIGH     = float(os.getenv("THRESHOLD_HIGH",     "0.70"))
-THRESHOLD_MEDIUM   = float(os.getenv("THRESHOLD_MEDIUM",   "0.50"))
-THRESHOLD_LOW      = float(os.getenv("THRESHOLD_LOW",      "0.30"))
+THRESHOLD_HIGH = float(os.getenv("THRESHOLD_HIGH", "0.70"))
+THRESHOLD_MEDIUM = float(os.getenv("THRESHOLD_MEDIUM", "0.50"))
+THRESHOLD_LOW = float(os.getenv("THRESHOLD_LOW", "0.30"))
 
 # ─── Startup validation ───────────────────────────────────────────────────────
 
@@ -91,6 +91,7 @@ _feature_cols: list = []
 def _load_models() -> None:
     global _ensemble, _anomaly_detector, _feature_engineer, _rag_explainer, _feature_cols
     import sys
+
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
     import joblib
@@ -100,9 +101,9 @@ def _load_models() -> None:
     from models.rag.rag_explainer import RAGExplainer
 
     ensemble_path = MODEL_DIR / "fraud_ensemble.joblib"
-    anomaly_path  = MODEL_DIR / "anomaly_detector.joblib"
-    fe_path       = MODEL_DIR / "feature_engineer.joblib"
-    cols_path     = MODEL_DIR / "feature_cols_augmented.json"
+    anomaly_path = MODEL_DIR / "anomaly_detector.joblib"
+    fe_path = MODEL_DIR / "feature_engineer.joblib"
+    cols_path = MODEL_DIR / "feature_cols_augmented.json"
     if not cols_path.exists():
         cols_path = MODEL_DIR / "feature_cols.json"
 
@@ -132,70 +133,84 @@ def _load_models() -> None:
 
 # ─── Input validation ─────────────────────────────────────────────────────────
 
+
 class TransactionSchema(Schema):
-    transaction_id     = ma_fields.Str(load_default=None)
-    user_id            = ma_fields.Int(required=True)
-    amount             = ma_fields.Float(required=True,
-                             validate=ma_validate.Range(min=0, min_inclusive=False,
-                                                        error="amount must be greater than 0."))
-    merchant_category  = ma_fields.Str(load_default="unknown")
-    payment_method     = ma_fields.Str(load_default="unknown")
-    device_type        = ma_fields.Str(load_default="unknown")
-    channel            = ma_fields.Str(load_default="online")
-    timestamp          = ma_fields.Str(load_default=None)
-    account_age_days   = ma_fields.Int(load_default=365,
-                             validate=ma_validate.Range(min=0,
-                                                        error="account_age_days must be >= 0."))
-    credit_utilization = ma_fields.Float(load_default=0.3,
-                             validate=ma_validate.Range(min=0.0, max=1.0,
-                                                        error="credit_utilization must be 0–1."))
-    prior_fraud_count  = ma_fields.Int(load_default=0)
-    explain            = ma_fields.Bool(load_default=False)
+    transaction_id = ma_fields.Str(load_default=None)
+    user_id = ma_fields.Int(required=True)
+    amount = ma_fields.Float(
+        required=True,
+        validate=ma_validate.Range(
+            min=0, min_inclusive=False, error="amount must be greater than 0."
+        ),
+    )
+    merchant_category = ma_fields.Str(load_default="unknown")
+    payment_method = ma_fields.Str(load_default="unknown")
+    device_type = ma_fields.Str(load_default="unknown")
+    channel = ma_fields.Str(load_default="online")
+    timestamp = ma_fields.Str(load_default=None)
+    account_age_days = ma_fields.Int(
+        load_default=365, validate=ma_validate.Range(min=0, error="account_age_days must be >= 0.")
+    )
+    credit_utilization = ma_fields.Float(
+        load_default=0.3,
+        validate=ma_validate.Range(min=0.0, max=1.0, error="credit_utilization must be 0–1."),
+    )
+    prior_fraud_count = ma_fields.Int(load_default=0)
+    explain = ma_fields.Bool(load_default=False)
 
 
 class FeedbackSchema(Schema):
-    transaction_id  = ma_fields.Str(required=True)
-    predicted_tier  = ma_fields.Str(required=True)
-    actual_label    = ma_fields.Int(required=True)
-    analyst_id      = ma_fields.Str(load_default=None)
+    transaction_id = ma_fields.Str(required=True)
+    predicted_tier = ma_fields.Str(required=True)
+    actual_label = ma_fields.Int(required=True)
+    analyst_id = ma_fields.Str(load_default=None)
 
 
-_schema       = TransactionSchema()
+_schema = TransactionSchema()
 _batch_schema = TransactionSchema(many=True)
-_fb_schema    = FeedbackSchema()
+_fb_schema = FeedbackSchema()
 
 # ─── Swagger models ───────────────────────────────────────────────────────────
 
-transaction_model = api.model("Transaction", {
-    "user_id":            fields.Integer(required=True, example=12345),
-    "amount":             fields.Float(required=True, example=4999.99),
-    "merchant_category":  fields.String(example="crypto"),
-    "payment_method":     fields.String(example="credit"),
-    "device_type":        fields.String(example="mobile"),
-    "channel":            fields.String(example="online"),
-    "timestamp":          fields.String(example="2024-01-15T02:30:00"),
-    "account_age_days":   fields.Integer(example=180),
-    "credit_utilization": fields.Float(example=0.87),
-    "prior_fraud_count":  fields.Integer(example=0),
-    "explain":            fields.Boolean(example=True),
-})
+transaction_model = api.model(
+    "Transaction",
+    {
+        "user_id": fields.Integer(required=True, example=12345),
+        "amount": fields.Float(required=True, example=4999.99),
+        "merchant_category": fields.String(example="crypto"),
+        "payment_method": fields.String(example="credit"),
+        "device_type": fields.String(example="mobile"),
+        "channel": fields.String(example="online"),
+        "timestamp": fields.String(example="2024-01-15T02:30:00"),
+        "account_age_days": fields.Integer(example=180),
+        "credit_utilization": fields.Float(example=0.87),
+        "prior_fraud_count": fields.Integer(example=0),
+        "explain": fields.Boolean(example=True),
+    },
+)
 
-prediction_response = api.model("PredictionResponse", {
-    "transaction_id": fields.String(),
-    "fraud_score":    fields.Float(),
-    "anomaly_score":  fields.Float(),
-    "fraud_label":    fields.Integer(),
-    "risk_tier":      fields.String(),
-    "explanation":    fields.String(),
-    "latency_ms":     fields.Float(),
-})
+prediction_response = api.model(
+    "PredictionResponse",
+    {
+        "transaction_id": fields.String(),
+        "fraud_score": fields.Float(),
+        "anomaly_score": fields.Float(),
+        "fraud_label": fields.Integer(),
+        "risk_tier": fields.String(),
+        "explanation": fields.String(),
+        "latency_ms": fields.Float(),
+    },
+)
 
-feedback_model = api.model("Feedback", {
-    "transaction_id": fields.String(required=True, example="TXN-0001-AA"),
-    "predicted_tier": fields.String(required=True, example="HIGH"),
-    "actual_label":   fields.Integer(required=True, example=1),
-    "analyst_id":     fields.String(example="analyst@example.com"),
-})
+feedback_model = api.model(
+    "Feedback",
+    {
+        "transaction_id": fields.String(required=True, example="TXN-0001-AA"),
+        "predicted_tier": fields.String(required=True, example="HIGH"),
+        "actual_label": fields.Integer(required=True, example=1),
+        "analyst_id": fields.String(example="analyst@example.com"),
+    },
+)
 
 FEEDBACK_LOG_PATH = Path(os.getenv("FEEDBACK_LOG_PATH", "feedback.jsonl"))
 
@@ -225,11 +240,14 @@ def _check_api_key() -> Optional[tuple]:
         return None
     if request.headers.get("X-Api-Key", "") != _API_KEY:
         REQUEST_COUNT.labels(endpoint="auth", status="401").inc()
-        return jsonify({"error": "Unauthorized", "detail": "Invalid or missing X-Api-Key header"}), 401
+        return jsonify(
+            {"error": "Unauthorized", "detail": "Invalid or missing X-Api-Key header"}
+        ), 401
     return None
 
 
 # ─── Request ID ───────────────────────────────────────────────────────────────
+
 
 @app.before_request
 def _attach_request_id() -> None:
@@ -246,6 +264,7 @@ def _add_request_id_header(response: Any) -> Any:
 
 # ─── Error handlers ───────────────────────────────────────────────────────────
 # Use @api.errorhandler so flask-restx doesn't override them.
+
 
 @api.errorhandler(Exception)
 def handle_generic(e: Exception) -> tuple[dict, int]:
@@ -264,6 +283,7 @@ def rate_limit_exceeded(e):
 
 
 # ─── Core scoring logic ───────────────────────────────────────────────────────
+
 
 def _determine_risk_tier(fraud_score: float) -> str:
     """Map a fraud probability to a categorical risk tier."""
@@ -293,8 +313,17 @@ def _score_transaction(txn: dict) -> dict:
             if col in df.columns:
                 X_base[col] = df[col].fillna(0)
     else:
-        exclude = {"is_fraud", "transaction_id", "user_id", "timestamp",
-                   "merchant_id", "ip_address", "device_fingerprint", "country", "explain"}
+        exclude = {
+            "is_fraud",
+            "transaction_id",
+            "user_id",
+            "timestamp",
+            "merchant_id",
+            "ip_address",
+            "device_fingerprint",
+            "country",
+            "explain",
+        }
         feat_cols = [c for c in df.select_dtypes(include="number").columns if c not in exclude]
         X_base = df[feat_cols].fillna(0)
 
@@ -314,6 +343,7 @@ def _score_transaction(txn: dict) -> dict:
         fraud_score = float(_ensemble.predict_proba(X)[0, 1])
     else:
         import random
+
         fraud_score = round(random.uniform(0.01, 0.95), 4)
 
     risk_tier = _determine_risk_tier(fraud_score)
@@ -339,16 +369,17 @@ def _score_transaction(txn: dict) -> dict:
 
     return {
         "transaction_id": txn.get("transaction_id"),
-        "fraud_score":    round(fraud_score, 6),
-        "anomaly_score":  round(anomaly_score, 6),
-        "fraud_label":    int(fraud_score >= 0.5),
-        "risk_tier":      risk_tier,
-        "explanation":    explanation,
-        "latency_ms":     round(latency_ms, 2),
+        "fraud_score": round(fraud_score, 6),
+        "anomaly_score": round(anomaly_score, 6),
+        "fraud_label": int(fraud_score >= 0.5),
+        "risk_tier": risk_tier,
+        "explanation": explanation,
+        "latency_ms": round(latency_ms, 2),
     }
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
+
 
 @ns.route("/health")
 class HealthCheck(Resource):
@@ -360,6 +391,7 @@ class HealthCheck(Resource):
 class Metrics(Resource):
     def get(self):
         from flask import Response
+
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
@@ -368,10 +400,10 @@ class ModelInfo(Resource):
     def get(self):
         return {
             "ensemble_loaded": _ensemble is not None,
-            "anomaly_loaded":  _anomaly_detector is not None,
-            "rag_loaded":      _rag_explainer is not None,
-            "feature_count":   len(_feature_cols),
-            "version":         "1.0.0",
+            "anomaly_loaded": _anomaly_detector is not None,
+            "rag_loaded": _rag_explainer is not None,
+            "feature_count": len(_feature_cols),
+            "version": "1.0.0",
         }
 
 
@@ -395,7 +427,7 @@ class Predict(Resource):
 @ns.route("/predict/batch")
 class PredictBatch(Resource):
     def post(self):
-        payload      = request.get_json(force=True) or {}
+        payload = request.get_json(force=True) or {}
         transactions = payload.get("transactions")
         if transactions is None:
             return {"error": "Missing 'transactions' key."}, 400
@@ -429,10 +461,11 @@ class Feedback(Resource):
             return {"error": str(e.messages)}, 400
 
         import datetime
+
         record = {
             **data,
             "request_id": getattr(g, "request_id", None),
-            "logged_at":  datetime.datetime.utcnow().isoformat(),
+            "logged_at": datetime.datetime.utcnow().isoformat(),
         }
         try:
             with open(FEEDBACK_LOG_PATH, "a") as f:
@@ -450,6 +483,7 @@ class Version(Resource):
     def get(self):
         """Return API version and runtime metadata."""
         import sys as _sys
+
         return {
             "version": "1.0.0",
             "api": "Fraud Detection API",
