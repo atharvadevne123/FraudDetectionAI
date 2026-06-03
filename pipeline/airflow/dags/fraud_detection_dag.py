@@ -250,6 +250,7 @@ with DAG(
 
     @task(task_id="store_results")
     def store_results(explained_path: str, **context: Any) -> None:
+        """Upload the fully-scored and explained batch parquet to S3 results prefix."""
         s3 = boto3.client("s3")
         execution_date = context["execution_date"].strftime("%Y%m%d_%H%M")
         key = f"{S3_RESULTS_PREFIX}results_{execution_date}.parquet"
@@ -299,6 +300,7 @@ with DAG(
 
 
 def _generate_synthetic_batch(n: int = 500) -> pd.DataFrame:
+    """Generate a small synthetic transaction batch for DAG demo/testing purposes."""
     import numpy as np
 
     rng = np.random.default_rng(42)
