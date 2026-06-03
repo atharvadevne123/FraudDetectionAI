@@ -20,6 +20,8 @@ API_URL = "http://localhost:8001"
 
 # Serve the HTML dashboard over HTTP (avoids file:// CORS issues)
 class SilentHandler(http.server.SimpleHTTPRequestHandler):
+    """HTTP request handler that suppresses all console log output."""
+
     def log_message(self, *a) -> None:  # noqa: ANN002
         """Suppress all HTTP request log output."""
 
