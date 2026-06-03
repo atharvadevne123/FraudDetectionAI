@@ -223,3 +223,26 @@ class TestBatchPredictParametrized:
                         data=json.dumps({"transactions": txns}),
                         content_type="application/json")
         assert r.status_code == 400
+
+
+class TestVersionAndReadinessEndpoints:
+    def test_version_endpoint_returns_200(self, client):
+        r = client.get("/version")
+        assert r.status_code == 200
+
+    def test_version_contains_version_key(self, client):
+        r = client.get("/version")
+        assert "version" in r.get_json()
+
+    def test_readiness_returns_json(self, client):
+        r = client.get("/readiness")
+        assert r.is_json
+
+    def test_readiness_has_ready_key(self, client):
+        r = client.get("/readiness")
+        assert "ready" in r.get_json()
+
+    @pytest.mark.parametrize("endpoint", ["/health", "/version", "/readiness"])
+    def test_get_endpoints_respond(self, client, endpoint):
+        r = client.get(endpoint)
+        assert r.status_code in (200, 503)
