@@ -20,9 +20,10 @@ API_URL = "http://localhost:8001"
 
 # Serve the HTML dashboard over HTTP (avoids file:// CORS issues)
 class SilentHandler(http.server.SimpleHTTPRequestHandler):
-    def log_message(self, *a): pass
+    def log_message(self, *a) -> None:  # noqa: ANN002
+        """Suppress all HTTP request log output."""
 
-def start_server(port=9090):
+def start_server(port: int = 9090) -> http.server.HTTPServer:
     os.chdir(ROOT / "ui")
     srv = http.server.HTTPServer(("", port), SilentHandler)
     t = threading.Thread(target=srv.serve_forever, daemon=True)
@@ -106,14 +107,14 @@ TIER_COLOR = {
 }
 
 
-def save_api_json(name: str, data: dict):
+def save_api_json(name: str, data: dict) -> None:
     """Save pretty-printed JSON as a text artifact (embedded in README as code block)."""
     path = SS / f"api_{name}.json"
     path.write_text(json.dumps(data, indent=2))
     print(f"  ✓ saved api_{name}.json")
 
 
-def capture_api_screenshots(page):
+def capture_api_screenshots(page) -> None:
     """Hit every API endpoint and save JSON + take a terminal-style visual screenshot."""
     import urllib.error
     import urllib.request
@@ -181,7 +182,7 @@ def capture_api_screenshots(page):
         print(f"  ✓ screenshot: api_{name}.png")
 
 
-def build_terminal_html(tier, payload, result, clr):
+def build_terminal_html(tier: str, payload: dict, result: dict, clr: str) -> str:
     fs = result.get("fraud_score", 0)
     as_ = result.get("anomaly_score", 0)
     rt = result.get("risk_tier", tier)
@@ -257,7 +258,7 @@ pre{{color:#94a3b8;font-size:12px;line-height:1.6;white-space:pre-wrap;}}
 </div></body></html>"""
 
 
-def build_info_terminal_html(title, data):
+def build_info_terminal_html(title: str, data: dict) -> str:
     lines = []
     for k, v in data.items():
         val = f'"{v}"' if isinstance(v, str) else str(v).lower() if isinstance(v, bool) else str(v)
@@ -284,7 +285,7 @@ pre{{padding:16px 18px;color:#94a3b8;font-size:13px;line-height:1.8;}}
 </div></body></html>"""
 
 
-def capture_dashboard_screenshots(page, server_url="http://localhost:9090"):
+def capture_dashboard_screenshots(page, server_url: str = "http://localhost:9090") -> None:
     print("\n── Dashboard Screenshots ───────────────────────────────")
     page.set_viewport_size({"width": 1440, "height": 860})
 
@@ -331,7 +332,8 @@ def capture_dashboard_screenshots(page, server_url="http://localhost:9090"):
     print("  ✓ dashboard_scorer_clean.png")
 
 
-def main():
+def main() -> None:
+    """Orchestrate API and dashboard screenshot capture for README documentation."""
     print("Starting screenshot capture for SENTINELLA README...")
     srv = start_server(9090)
     time.sleep(0.5)
