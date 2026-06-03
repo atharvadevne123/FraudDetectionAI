@@ -246,3 +246,30 @@ class TestVersionAndReadinessEndpoints:
     def test_get_endpoints_respond(self, client, endpoint):
         r = client.get(endpoint)
         assert r.status_code in (200, 503)
+
+
+class TestPredictInputValidation:
+    @pytest.mark.parametrize(
+        "payload,expected_status",
+        [
+            ({"user_id": 1, "amount": 100.0}, 200),  # minimal valid (merchant_category, etc. have defaults)
+            ({}, 400),  # missing required fields
+            ({"user_id": 1, "amount": -5.0}, 400),  # negative amount
+            ({"user_id": 1, "amount": 100.0, "credit_utilization": 2.0}, 400),  # util out of range
+        ],
+    )
+    def test_predict_input_validation(self, client, patch_models, payload, expected_status):
+        r = client.post(
+            "/predict",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        assert r.status_code == expected_status
+
+    def test_predict_missing_user_id_returns_400(self, client, patch_models):
+        r = client.post(
+            "/predict",
+            data=json.dumps({"amount": 200.0}),
+            content_type="application/json",
+        )
+        assert r.status_code == 400
