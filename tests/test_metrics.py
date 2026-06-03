@@ -92,3 +92,40 @@ class TestDetectionRate:
         y = np.array([0, 0, 0])
         p = np.array([0, 0, 0])
         assert detection_rate(y, p) == 0.0
+
+
+class TestMetricsParametrized:
+    @pytest.mark.parametrize(
+        "k,expected",
+        [(1, 0.0), (2, 0.5), (4, 0.5)],
+    )
+    def test_precision_at_k_parametrized(self, k, expected):
+        from utils.metrics import precision_at_k
+
+        y = np.array([0, 0, 1, 1])
+        scores = np.array([0.1, 0.2, 0.8, 0.9])
+        assert precision_at_k(y, scores, k) == pytest.approx(expected)
+
+    @pytest.mark.parametrize(
+        "frac_fraud",
+        [0.0, 0.1, 0.5, 1.0],
+    )
+    def test_average_precision_bounds(self, frac_fraud):
+        from utils.metrics import average_precision
+
+        rng = __import__("numpy").random.default_rng(0)
+        n = 100
+        n_pos = int(n * frac_fraud)
+        y = __import__("numpy").array([1] * n_pos + [0] * (n - n_pos))
+        scores = rng.uniform(0, 1, n)
+        ap = average_precision(y, scores)
+        assert 0.0 <= ap <= 1.0
+
+    @pytest.mark.parametrize("k", [1, 5, 10, 50])
+    def test_precision_at_k_never_exceeds_one(self, k):
+        from utils.metrics import precision_at_k
+
+        rng = __import__("numpy").random.default_rng(1)
+        y = rng.integers(0, 2, 100)
+        scores = rng.uniform(0, 1, 100)
+        assert 0.0 <= precision_at_k(y, scores, k) <= 1.0
