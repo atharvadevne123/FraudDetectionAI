@@ -61,3 +61,21 @@ class TestModelInfoExtended:
     def test_feature_count_non_negative(self, client):
         data = client.get("/model/info").get_json()
         assert data["feature_count"] >= 0
+
+
+class TestHealthParametrized:
+    import pytest
+
+    @pytest.mark.parametrize("endpoint,method", [
+        ("/health", "GET"),
+        ("/version", "GET"),
+        ("/model/info", "GET"),
+    ])
+    def test_get_endpoints_return_json(self, client, endpoint, method):
+        r = client.get(endpoint)
+        assert r.is_json
+
+    @pytest.mark.parametrize("endpoint", ["/health", "/version", "/model/info"])
+    def test_get_endpoints_non_500(self, client, endpoint):
+        r = client.get(endpoint)
+        assert r.status_code < 500
