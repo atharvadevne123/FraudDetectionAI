@@ -127,12 +127,21 @@ class FraudEnsemble:
         X_arr = self.scaler.fit_transform(X.values)
         y_arr = y.values
 
+        fraud_rate = y_arr.mean()
         logger.info(
-            "Applying SMOTE to balance {:,} samples (fraud rate: {:.2%}).", len(y_arr), y_arr.mean()
+            "Applying SMOTE to balance {:,} samples (fraud rate: {:.2%}).", len(y_arr), fraud_rate
         )
-        smote = SMOTE(sampling_strategy=0.1, random_state=self.random_state)
-        X_res, y_res = smote.fit_resample(X_arr, y_arr)
-        logger.info("Post-SMOTE: {:,} samples.", len(y_res))
+        smote_target = 0.1
+        n_minority = int(y_arr.sum())
+        n_majority = len(y_arr) - n_minority
+        current_ratio = n_minority / n_majority if n_majority > 0 else 1.0
+        if current_ratio < smote_target and n_minority >= 6:
+            smote = SMOTE(sampling_strategy=smote_target, random_state=self.random_state)
+            X_res, y_res = smote.fit_resample(X_arr, y_arr)
+            logger.info("Post-SMOTE: {:,} samples.", len(y_res))
+        else:
+            X_res, y_res = X_arr, y_arr
+            logger.info("Skipping SMOTE: minority ratio {:.2%} already >= target {:.0%}.", current_ratio, smote_target)
 
         voter = VotingClassifier(
             estimators=[
