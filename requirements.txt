@@ -11,7 +11,7 @@ pyod>=3.5.2
 
 # RAG / FAISS / Embeddings
 faiss-cpu>=1.7.4
-sentence-transformers>=2.7.0
+sentence-transformers>=5.1.2
 anthropic>=0.97.0
 
 # API
