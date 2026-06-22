@@ -10,7 +10,7 @@ imbalanced-learn>=0.12.4
 pyod>=3.6.0
 
 # RAG / FAISS / Embeddings
-faiss-cpu>=1.7.4
+faiss-cpu>=1.13.0
 sentence-transformers>=5.1.2
 anthropic>=0.111.0
 
