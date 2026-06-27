@@ -7,7 +7,7 @@ lightgbm>=4.6.0
 imbalanced-learn>=0.12.4
 
 # Anomaly Detection
-pyod>=3.6.0
+pyod>=3.6.1
 
 # RAG / FAISS / Embeddings
 faiss-cpu>=1.13.0
