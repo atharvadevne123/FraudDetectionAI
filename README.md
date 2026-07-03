@@ -461,3 +461,49 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, workflow, and commit conventio
 ## License
 
 MIT
+## Palantir Foundry Integration
+
+FraudDetectionAI ships with a production-grade Palantir Foundry client
+(`foundry/foundry_client.py`) that covers:
+
+- **Dataset sync** — transactional Parquet upload (`upload_dataset`, `batch_upload`) and
+  download (`read_dataset`) via the Foundry Catalog API, plus `create_dataset`,
+  `list_branches`, and `get_schema`
+- **Model registry** — `register_model` publishes model versions with metrics to the
+  Foundry model registry
+- **Prediction logging** — `log_predictions` appends timestamped scoring output to a
+  Foundry dataset
+- **Pipeline triggers** — `publish_to_pipeline` kicks off Foundry builds;
+  `get_build_status` polls them
+- **Data quality gates** — `validate_data_quality` enforces required columns and null
+  thresholds before any upload
+- **Transactions** — explicit `create_transaction` / `commit_transaction` /
+  `abort_transaction` control, with automatic abort on failed uploads
+- **Resilience** — retries with exponential back-off on 429/5xx, structured loguru
+  logging, and a typed `FoundryError` on API failures
+
+### Configuration
+
+```bash
+FOUNDRY_HOST=https://your-instance.palantirfoundry.com
+FOUNDRY_TOKEN=your_foundry_token
+FOUNDRY_FOLDER_RID=ri.compass.main.folder.xxxxxxxx
+TRANSACTIONS_DATASET_RID=ri.foundry.main.dataset.xxxxxxxx
+FRAUD_PREDICTIONS_DATASET_RID=ri.foundry.main.dataset.yyyyyyyy
+```
+
+### Usage
+
+```python
+from foundry.foundry_client import FoundryClient
+
+client = FoundryClient()  # reads FOUNDRY_HOST / FOUNDRY_TOKEN from env
+
+# Pull training data
+df = client.read_dataset(os.environ["TRANSACTIONS_DATASET_RID"])
+
+# Quality-gate and push predictions
+report = client.validate_data_quality(preds, required_columns=["transaction_id", "fraud_score"])
+if report["passed"]:
+    client.log_predictions(preds, os.environ["FRAUD_PREDICTIONS_DATASET_RID"])
+```
